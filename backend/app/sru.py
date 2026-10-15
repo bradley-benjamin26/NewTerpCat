@@ -41,6 +41,12 @@ MAX_COMBOS = 20
 # Narrower queries surface matches that SRU's alphabetical order pushes past the first page.
 MAX_NARROW = 4
 SUBJECT_TAGS = ("600", "610", "611", "630", "650", "651")
+# Note types a patron can use; others (588 source of description, 583 actions...) are for catalogers.
+NOTE_LABELS = {
+    "500": "Note", "501": "With", "502": "Dissertation", "504": "Bibliography", "506": "Access",
+    "508": "Credits", "511": "Performers", "518": "Date and place", "521": "Audience",
+    "530": "Other formats", "538": "System requirements", "546": "Language", "586": "Awards",
+}
 
 
 def _quoted(s: str) -> str:
@@ -177,6 +183,13 @@ def _details(rec) -> dict:
         texts = (" ".join(sf.text or "" for sf in f.findall("marc:subfield", NS) if sf.get("code") in codes) for f in fields)
         return [t.rstrip(TRAILING) for t in texts if t]
 
+    notes = {}  # label -> texts, in the order the record first uses each label
+    for f in rec.findall("marc:datafield", NS):
+        if label := NOTE_LABELS.get(f.get("tag")):
+            # Every lettered subfield but $u, a link that would show as bare text.
+            text = " ".join(sf.text or "" for sf in f.findall("marc:subfield", NS) if sf.get("code").isalpha() and sf.get("code") != "u")
+            if text := text.rstrip(TRAILING):
+                notes.setdefault(label, []).append(text)
     contents = one("505", "agrt")  # enhanced notes put chapters in $t and $r, with no $a
     return {
         "publication": one("264", "abc") or one("260", "abc"),
@@ -187,7 +200,7 @@ def _details(rec) -> dict:
         "isbns": every({"020"}),
         "contributors": every({"700", "710"}, "ab"),
         "contents": [c.strip(TRAILING) for c in contents.split(" -- ")] if contents else [],
-        "notes": every({"500", "504"}),
+        "notes": [{"label": label, "texts": texts} for label, texts in notes.items()],
     }
 
 

@@ -33,7 +33,7 @@ bookmarked or shared. It is the base that 6b (requesting), 6c (covers), 6d (cita
   | `contributors` | list[str]   | every 700 $a $b and 710 $a $b                   |
   | `summary`      | str or None | 520 $a                                          |
   | `contents`     | list[str]   | 505 $a split on ` -- `                          |
-  | `notes`        | list[str]   | every 500 $a and 504 $a                         |
+  | `notes`        | list[{label, texts}] | patron-facing 5XX notes, labelled by type (`NOTE_LABELS` in sru.py: Note, Bibliography, Other formats, Dissertation…), grouped in record order; cataloger notes such as 588 are left out |
 
 - `record(xml, library=None)` returns the first record in an SRU response as `_record(...) | _details(...)`,
   or `None` when the response has no records.
@@ -75,7 +75,7 @@ h2  Details              ← <dl>, two columns, one column on phones:
                             Published, Edition, Description, Series, ISBN, Other authors
 h2  Subjects             ← list of LCSH headings
 h2  Contents             ← list
-h2  Notes                ← list
+h2  Notes                ← <dl>: note type, then its notes
 ```
 
 - Availability wording reuses the results list's statuses. A Big Ten-only record reads "Not held at UMD.

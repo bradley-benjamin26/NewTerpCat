@@ -34,7 +34,10 @@ const full = {
   isbns: ["9781421437576", "1421437570"],
   contributors: ["Breitburg, Denise", "Maryland Sea Grant"],
   contents: ["Origins", "The fishery", "Restoration"],
-  notes: ["Includes index", "Includes bibliographical references"],
+  notes: [
+    { label: "Note", texts: ["Cover title", "Shipping list no.: 2007-0043-P"] },
+    { label: "Bibliography", texts: ["Includes bibliographical references"] },
+  ],
 };
 const bare = {
   ...full,
@@ -90,6 +93,20 @@ test("renders where to find it first, then the details", async () => {
     /9781421437576.*1421437570/,
   );
   await expectNoAxeViolations(container);
+});
+
+test("labels each note with its type", async () => {
+  api(full);
+  render(await ItemPage(props()));
+  const notes = screen.getByRole("heading", { name: "Notes" }).nextElementSibling as HTMLElement;
+  expect(notes.tagName).toBe("DL");
+  expect([...notes.querySelectorAll("dt, dd")].map((e) => `${e.tagName}:${e.textContent}`)).toEqual([
+    "DT:Note",
+    "DD:Cover title",
+    "DD:Shipping list no.: 2007-0043-P",
+    "DT:Bibliography",
+    "DD:Includes bibliographical references",
+  ]);
 });
 
 test("leaves out sections and details the record does not have", async () => {

@@ -24,7 +24,10 @@ def test_record_reads_every_detail_field():
     assert r["contributors"] == ["Breitburg, Denise", "Maryland Sea Grant"]
     assert r["summary"] == "A history of the oyster in the bay"
     assert r["contents"] == ["Origins", "The fishery", "Restoration"]
-    assert r["notes"] == ["Includes index", "Includes bibliographical references"]
+    assert r["notes"] == [
+        {"label": "Note", "texts": ["Includes index"]},
+        {"label": "Bibliography", "texts": ["Includes bibliographical references"]},
+    ]
 
 
 def test_details_are_empty_when_the_record_has_none():
@@ -277,3 +280,22 @@ def ave_record(status):
 def test_online_only_when_the_online_copy_is_available():
     assert parse_response(ave_record("Available"))["records"][0]["online"] is True
     assert parse_response(ave_record("Not Available"))["records"][0]["online"] is False
+
+
+def test_notes_are_labelled_by_type_and_grouped():
+    rec = ET.fromstring(
+        '<record xmlns="http://www.loc.gov/MARC21/slim">'
+        '<datafield tag="500"><subfield code="a">Cover title.</subfield></datafield>'
+        '<datafield tag="500"><subfield code="a">"June 2006."</subfield></datafield>'
+        '<datafield tag="530"><subfield code="a">Also available via Internet.</subfield>'
+        '<subfield code="u">http://example.org</subfield></datafield>'
+        '<datafield tag="502"><subfield code="b">Ph. D.</subfield><subfield code="c">University of Maryland,</subfield>'
+        '<subfield code="d">2019.</subfield></datafield>'
+        '<datafield tag="588"><subfield code="a">Description based on print version record.</subfield></datafield>'
+        '</record>'
+    )
+    assert _details(rec)["notes"] == [
+        {"label": "Note", "texts": ["Cover title", '"June 2006."']},
+        {"label": "Other formats", "texts": ["Also available via Internet"]},
+        {"label": "Dissertation", "texts": ["Ph. D. University of Maryland, 2019"]},
+    ]

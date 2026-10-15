@@ -18,7 +18,7 @@ type Item = Omit<CatalogRecord, "score" | "breakdown"> & {
   isbns: string[];
   contributors: string[];
   contents: string[];
-  notes: string[];
+  notes: { label: string; texts: string[] }[];
 };
 
 // Shared by the page and its title, so a request asks the API once. null means the catalog failed.
@@ -126,7 +126,21 @@ export default async function ItemPage({ params }: PageProps<"/item/[id]">) {
       )}
       <List heading="Subjects" items={item.subjects} />
       <List heading="Contents" items={item.contents} />
-      <List heading="Notes" items={item.notes} />
+      {item.notes.length > 0 && (
+        <>
+          <h2>Notes</h2>
+          <dl className={styles.details}>
+            {item.notes.map((n) => (
+              <div key={n.label}>
+                <dt>{n.label}</dt>
+                {n.texts.map((text, i) => (
+                  <dd key={i}>{text}</dd>
+                ))}
+              </div>
+            ))}
+          </dl>
+        </>
+      )}
     </main>
   );
 }
