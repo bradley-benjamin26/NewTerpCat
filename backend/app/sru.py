@@ -1,5 +1,5 @@
 import re
-from itertools import islice, product
+from itertools import chain, islice, product, zip_longest
 import xml.etree.ElementTree as ET
 
 import httpx
@@ -16,21 +16,31 @@ TRAILING = " /:;,."
 # Combinations multiply with each AND part and matched heading (2**20 for 20 parts); keep the first few,
 # which use the keywords and the best headings.
 MAX_COMBOS = 20
+# Narrower queries surface matches that SRU's alphabetical order pushes past the first page.
+MAX_NARROW = 4
+SUBJECT_TAGS = ("600", "610", "611", "630", "650", "651")
 
 
 def _quoted(s: str) -> str:
     return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
-def _keywords(keywords: list[str]) -> str:
+def _keywords(keywords: list[str], index: str = "alma.all_for_ui") -> str:
     # "all" matches the words in any order; "=" on multiple words is an exact phrase in Alma.
-    return f"alma.all_for_ui all {_quoted(' '.join(keywords))}"
+    return f"{index} all {_quoted(' '.join(keywords))}"
 
 
-def _alternatives(part: dict) -> list[list[str]]:
+def _alternatives(part: dict, narrow: bool) -> list[list[str]]:
     """Ways one part of the query can match; each is a list of clauses that must all hold."""
-    alternatives = [[_keywords(part["keywords"])]]
-    alternatives += [[f"alma.creator all {_quoted(p)}"] for p in part["people"]]
+    people = [f"alma.creator all {_quoted(p)}" for p in part["people"]]
+    if narrow:
+        # The other words in the title, by the named author: "Toni Morrison beloved" finds Beloved.
+        names = {w.casefold() for p in part["people"] for w in p.split()}
+        title = [k for k in part["keywords"] if k.casefold() not in names] or part["keywords"]
+        alternatives = [[_keywords(title, "alma.title"), *people]]
+    else:
+        alternatives = [[_keywords(part["keywords"])]]
+    alternatives += [[p] for p in people]
     if part["subjects"]:
         # One heading from every phrase, so a broad heading like "History" can't flood the results.
         combos = islice(product(*(s["headings"] for s in part["subjects"])), MAX_COMBOS)
@@ -38,27 +48,40 @@ def _alternatives(part: dict) -> list[list[str]]:
     return alternatives
 
 
-def _group(parts: list[dict]) -> str:
+def _group(parts: list[dict], narrow: bool) -> list[str]:
     include = [p for p in parts if p.get("operator") != "NOT"]
     if not include:
         raise ValueError("NOT needs something to search for first, for example: jazz NOT blues")
     exclude = "".join(f" NOT {_keywords(p['keywords'])}" for p in parts if p.get("operator") == "NOT")
-    combos = islice(product(*map(_alternatives, include)), MAX_COMBOS)
-    return " OR ".join(" AND ".join(c for alt in combo for c in alt) + exclude for combo in combos)
+    combos = islice(product(*(_alternatives(p, narrow) for p in include)), MAX_COMBOS)
+    return [" AND ".join(c for alt in combo for c in alt) + exclude for combo in combos]
 
 
-def cql_query(parts: list[dict]) -> str:
-    """Parts joined by the user's AND/OR/NOT, with AND and NOT binding tighter than OR. Alma mishandles
-    parentheses but uses the same precedence, so the query is written out as an OR of ANDs."""
+def _terms(parts: list[dict], narrow: bool = False) -> list[list[str]]:
+    """The OR-of-ANDs terms for each OR branch of the query."""
     groups = [[]]
     for part in parts:
         if part.get("operator") == "OR":
             groups.append([])
         groups[-1].append(part)
-    return " OR ".join(map(_group, groups))
+    return [_group(group, narrow) for group in groups]
 
 
-async def search(cql: str, limit: int = 10) -> bytes:
+def cql_query(parts: list[dict]) -> str:
+    """Parts joined by the user's AND/OR/NOT, with AND and NOT binding tighter than OR. Alma mishandles
+    parentheses but uses the same precedence, so the query is written out as an OR of ANDs."""
+    return " OR ".join(chain.from_iterable(_terms(parts)))
+
+
+def pool_queries(parts: list[dict]) -> list[str]:
+    """Narrow queries (keywords in the title, authors, subject headings), each one branch of the full query,
+    then the full query last."""
+    # Take turns across the OR branches, so every branch gets narrow queries.
+    narrow = [t for row in zip_longest(*_terms(parts, narrow=True)) for t in row if t]
+    return [*narrow[:MAX_NARROW], cql_query(parts)]
+
+
+async def search(cql: str, limit: int = 50) -> bytes:
     params = {
         "version": "1.2",
         "operation": "searchRetrieve",
@@ -80,11 +103,21 @@ def _subfields(rec, tag, codes):
     return [sf.text or "" for sf in field.findall("marc:subfield", NS) if sf.get("code") in codes]
 
 
+def _heading(field) -> str:
+    """A subject field written like an LCSH heading: "Oyster culture--Maryland"."""
+    sf = [(s.get("code"), s.text or "") for s in field.findall("marc:subfield", NS)]
+    name = " ".join(text for code, text in sf if code in {"a", "b", "c", "d", "q", "t"})
+    return "--".join(t.rstrip(TRAILING) for t in [name, *(text for code, text in sf if code in {"v", "x", "y", "z"})])
+
+
 def _record(rec) -> dict:
     mms_id = rec.findtext("marc:controlfield[@tag='001']", namespaces=NS)
     title = " ".join(_subfields(rec, "245", "ab")).rstrip(TRAILING)
     names = _subfields(rec, "100", "ab") or _subfields(rec, "110", "ab") or _subfields(rec, "111", "a")
     author = " ".join(names).rstrip(TRAILING) or None
+    subjects = [_heading(f) for f in rec.findall("marc:datafield", NS) if f.get("tag") in SUBJECT_TAGS]
+    oclc = next((m.group(1) for a in rec.iterfind("marc:datafield[@tag='035']/marc:subfield[@code='a']", NS)
+                 if (m := re.match(r"\(OCoLC\)\D*(\d+)", a.text or ""))), None)
     year = re.search(r"\d{4}", " ".join(_subfields(rec, "264", "c") or _subfields(rec, "260", "c")))
     holdings = []
     for ava in rec.findall("marc:datafield[@tag='AVA']", NS):
@@ -98,6 +131,8 @@ def _record(rec) -> dict:
         "url": UMD["record_url_template"].format(mms_id=mms_id),
         "online": rec.find("marc:datafield[@tag='AVE']", NS) is not None,
         "holdings": holdings,
+        "subjects": subjects,
+        "oclc": oclc,
     }
 
 

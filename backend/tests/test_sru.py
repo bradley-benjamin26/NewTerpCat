@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from app.sru import cql_query, parse_response
+from app.sru import cql_query, parse_response, pool_queries
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -122,3 +122,48 @@ def test_falls_back_to_corporate_author():
       <datafield tag="245" ind1="1" ind2="0"><subfield code="a">Oyster report.</subfield></datafield>
     </record></recordData></record></records></searchRetrieveResponse>"""
     assert parse_response(xml)["records"][0]["author"] == "Maryland. Department of Natural Resources"
+
+
+def test_parses_subjects_and_oclc_number():
+    rec = parse_response((FIXTURES / "sru_umd_print.xml").read_bytes())["records"][0]
+    assert rec["subjects"] == ["Oysters", "Oyster culture--Maryland"]
+    assert rec["oclc"] == "29201900"
+    records = parse_response((FIXTURES / "sru_umd.xml").read_bytes())["records"]
+    assert "Macleod, James Farquharson, 1836-1894" in records[1]["subjects"]
+    assert "Saskatchewan--Regina" in records[1]["subjects"]
+    assert "Correspondence" not in records[1]["subjects"]  # 655 is a genre, not a subject
+    assert records[0]["oclc"] == "1065648379"
+    assert records[1]["oclc"] is None
+
+
+def test_pool_runs_narrow_queries_before_the_full_query():
+    parts = [part(["Duke", "Ellington", "jazz", "Baltimore"], [["Jazz"]], ["Duke Ellington"])]
+    assert pool_queries(parts) == [
+        'alma.title all "jazz Baltimore" AND alma.creator all "Duke Ellington"',
+        'alma.creator all "Duke Ellington"',
+        'alma.subjects="Jazz"',
+        cql_query(parts),
+    ]
+
+
+def test_pool_narrow_queries_keep_the_exclusions():
+    parts = [part(["jazz"]), part(["blues"], operator="NOT")]
+    assert pool_queries(parts) == [
+        'alma.title all "jazz" NOT alma.all_for_ui all "blues"',
+        cql_query(parts),
+    ]
+
+
+def test_pool_caps_the_number_of_narrow_queries():
+    assert len(pool_queries([part(["x"], [["A", "B", "C", "D", "E", "F"]])])) == 5
+
+
+def test_pool_title_query_falls_back_to_all_keywords_when_only_a_name_was_typed():
+    assert pool_queries([part(["Toni", "Morrison"], people=["Toni Morrison"])])[0] == (
+        'alma.title all "Toni Morrison" AND alma.creator all "Toni Morrison"'
+    )
+
+
+def test_pool_gives_every_or_branch_narrow_queries():
+    parts = [part(["jazz"], [["A", "B", "C", "D", "E"]]), part(["oysters"], operator="OR")]
+    assert 'alma.title all "oysters"' in pool_queries(parts)

@@ -9,6 +9,8 @@ type CatalogRecord = {
   url: string;
   online: boolean;
   holdings: Holding[];
+  score: number;
+  breakdown: { rule: string; label: string; points: number }[];
 };
 type Searched = {
   operator: "AND" | "OR" | "NOT" | null;
@@ -33,6 +35,29 @@ function availability(r: CatalogRecord): string[] {
   );
   if (r.online) lines.push("Available online");
   return lines.length ? lines : ["Availability unknown: see the full record"];
+}
+
+const points = (n: number) => `${n} ${n === 1 ? "point" : "points"}`;
+
+function Relevance({ r }: { r: CatalogRecord }) {
+  return (
+    <details className={styles.relevance}>
+      {/* The title tells screen reader users which result each toggle belongs to. */}
+      <summary aria-label={`Relevance: ${points(r.score)} for ${r.title}`}>Relevance: {points(r.score)}</summary>
+      {r.breakdown.length ? (
+        <dl>
+          {r.breakdown.map((b) => (
+            <div key={b.rule}>
+              <dt>{b.label}</dt>
+              <dd>{points(b.points)}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : (
+        <p>No ranking rules matched.</p>
+      )}
+    </details>
+  );
 }
 
 function Part({ part }: { part: Searched }) {
@@ -106,6 +131,10 @@ export default function ResultsList({ query, result }: { query: string; result: 
         {result.total.toLocaleString()} {result.total === 1 ? "result" : "results"} for “{query}”
       </h1>
       {searched}
+      <p>
+        Sorted by relevance score, best first, showing {result.records.length}. Open “Relevance” under a result
+        to see how its points add up.
+      </p>
       <ol className={styles.results}>
         {result.records.map((r) => (
           <li key={r.id}>
@@ -118,6 +147,7 @@ export default function ResultsList({ query, result }: { query: string; result: 
                 {line}
               </p>
             ))}
+            <Relevance r={r} />
           </li>
         ))}
       </ol>

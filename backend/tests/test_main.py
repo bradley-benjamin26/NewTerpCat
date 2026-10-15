@@ -16,6 +16,14 @@ def offline_lcsh(monkeypatch):
     monkeypatch.setattr(main, "subjects", no_subjects)
 
 
+@pytest.fixture(autouse=True)
+def offline_worldcat(monkeypatch):
+    async def no_counts(oclc_numbers):
+        return {}
+
+    monkeypatch.setattr(main, "holding_counts", no_counts)
+
+
 def test_search_returns_parsed_records(monkeypatch):
     seen = {}
 
@@ -183,3 +191,46 @@ def test_overlong_query_is_rejected_before_any_lookup(monkeypatch):
     res = TestClient(main.app).get("/search", params={"q": " AND ".join(["jazz"] * 100)})
     assert res.status_code == 422
     assert "shorter" in res.json()["detail"]
+
+
+ELECTRONIC = (Path(__file__).parent / "fixtures" / "sru_umd.xml").read_bytes()
+
+
+def test_results_are_pooled_ranked_and_explained(monkeypatch):
+    sent = []
+
+    async def fake_fetch(cql):
+        sent.append(cql)
+        return FIXTURE if cql.startswith("alma.title") else ELECTRONIC
+
+    async def fake_counts(oclc_numbers):
+        return {"29201900": 3}
+
+    monkeypatch.setattr(main, "fetch", fake_fetch)
+    monkeypatch.setattr(main, "holding_counts", fake_counts)
+    body = TestClient(main.app).get("/search", params={"q": "oysters"}).json()
+    assert sent == ['alma.title all "oysters"', 'alma.all_for_ui all "oysters"']
+    assert body["total"] == 505  # from the full query
+    assert len(body["records"]) == 4  # 3 + 1, no duplicates
+    top = body["records"][0]
+    assert top["id"] == "990020965100108238"  # in print, available, and held elsewhere
+    assert {b["rule"]: b["points"] for b in top["breakdown"]} == {
+        "keywords_elsewhere": 5,
+        "available_umd": 20,
+        "holdings": 4,
+    }
+    assert top["score"] == 29
+    scores = [r["score"] for r in body["records"]]
+    assert scores == sorted(scores, reverse=True)
+
+
+def test_failed_narrow_query_keeps_the_full_results(monkeypatch):
+    async def fake_fetch(cql):
+        if cql.startswith("alma.title"):
+            raise main.httpx.ConnectError("unreachable")
+        return ELECTRONIC
+
+    monkeypatch.setattr(main, "fetch", fake_fetch)
+    res = TestClient(main.app).get("/search", params={"q": "oysters"})
+    assert res.status_code == 200
+    assert len(res.json()["records"]) == 3

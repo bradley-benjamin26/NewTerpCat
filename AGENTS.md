@@ -25,13 +25,15 @@
     * app/main.py -- /search endpoint: parses AND/OR/NOT, runs analysis and lookups, queries the catalog
     * app/analyze.py -- spaCy query analysis: keywords, possible authors, noun phrases
     * app/lcsh.py -- Library of Congress Subject Headings lookup and matching
-    * app/sru.py -- builds CQL queries for Alma SRU and parses MARCXML results
+    * app/sru.py -- builds CQL queries (full and narrow pool queries) for Alma SRU and parses MARCXML results
+    * app/rank.py -- relevancy scoring with a per-rule breakdown
+    * app/worldcat.py -- WorldCat holdings counts for the ranking bonus
     * tests/ -- pytest tests; fixtures/ holds sample SRU responses
 * frontend -- Next.js TypeScript web app
     * app/page.tsx -- home page with the search box
     * app/search/page.tsx -- results page; calls the backend
     * app/SearchForm.tsx -- search box
-    * app/ResultsList.tsx -- results list and "What we searched" panel
+    * app/ResultsList.tsx -- results list, relevance breakdown per result, and "What we searched" panel
     * tests/ -- Vitest + Testing Library tests, with axe accessibility checks
 * specDocuments -- contains contextual information
     * catalogServices.md -- describes services patrons can use in the catalog

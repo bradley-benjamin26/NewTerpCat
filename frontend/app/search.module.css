@@ -109,3 +109,30 @@
 .join {
   font-weight: 600;
 }
+
+.relevance summary {
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.relevance summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.relevance dl {
+  display: grid;
+  grid-template-columns: 1fr max-content;
+  gap: 0.25rem 1rem;
+  width: min(30rem, 100%);
+  margin: 0.25rem 0 0 1rem;
+}
+
+.relevance dl > div {
+  display: contents;
+}
+
+.relevance dd {
+  margin: 0;
+  text-align: right;
+}

@@ -15,7 +15,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
   const query = typeof q === "string" ? q.trim() : "";
   if (!query) redirect("/");
 
-  // 25 s covers the backend's own limits: catalog 15 s + two subject lookups (phrase, then fallback) at 3 s each.
+  // 25 s covers the backend's own limits: two subject lookups at 3 s each, catalog 15 s, WorldCat token + counts at 2 s each.
   const res = await fetch(`${API_URL}/search?${new URLSearchParams({ q: query })}`, {
     cache: "no-store",
     signal: AbortSignal.timeout(25_000),

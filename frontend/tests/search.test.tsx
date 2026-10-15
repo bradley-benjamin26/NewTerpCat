@@ -22,6 +22,8 @@ const results: SearchResult = {
       url: "https://example.org/1",
       online: false,
       holdings: [{ location: "Stacks", call_number: "QC903 .A247 2015", status: "available" }],
+      score: 20,
+      breakdown: [{ rule: "available_umd", label: "Available at UMD", points: 20 }],
     },
     {
       id: "2",
@@ -31,6 +33,8 @@ const results: SearchResult = {
       url: "https://example.org/2",
       online: true,
       holdings: [],
+      score: 20,
+      breakdown: [{ rule: "available_umd", label: "Available at UMD", points: 20 }],
     },
     {
       id: "3",
@@ -40,6 +44,8 @@ const results: SearchResult = {
       url: "https://example.org/3",
       online: false,
       holdings: [],
+      score: 0,
+      breakdown: [],
     },
   ],
 };
@@ -152,5 +158,30 @@ test("a Boolean query shows each part with the operator that joins it", async ()
   within(parts[3]).getByText("blues");
   // Excluded parts are matched by keyword only, so no subject row that reads like a failed lookup.
   expect(within(parts[3]).queryByText(/subject headings/i)).toBeNull();
+  await expectNoAxeViolations(container);
+});
+
+test("each result shows its relevance score and how the points add up", async () => {
+  const rec = {
+    ...results.records[0],
+    score: 125,
+    breakdown: [
+      { rule: "exact_title", label: "Exact title match", points: 100 },
+      { rule: "phrase", label: "Search words appear together in the title", points: 25 },
+    ],
+  };
+  const { container } = render(
+    <ResultsList query="x" result={{ total: 2, records: [rec, results.records[2]] }} />,
+  );
+  screen.getByText(/sorted by relevance score/i);
+  const [first, second] = screen.getAllByRole("listitem");
+  expect(within(first).getByText("Relevance: 125 points").getAttribute("aria-label")).toBe(
+    "Relevance: 125 points for The adaptive challenge of climate change",
+  );
+  within(first).getByText("Exact title match");
+  within(first).getByText("100 points");
+  within(first).getByText("25 points");
+  within(second).getByText("Relevance: 0 points");
+  within(second).getByText(/no ranking rules matched/i);
   await expectNoAxeViolations(container);
 });
