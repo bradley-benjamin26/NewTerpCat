@@ -14,18 +14,26 @@ NS = {"srw": "http://www.loc.gov/zing/srw/", "marc": "http://www.loc.gov/MARC21/
 TRAILING = " /:;,."
 
 
-def cql_query(q: str) -> str:
-    escaped = q.replace("\\", "\\\\").replace('"', '\\"')
-    return f'alma.all_for_ui="{escaped}"'
+def _quoted(s: str) -> str:
+    return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
-async def search(q: str, limit: int = 10) -> bytes:
+def cql_query(keywords: list[str], subjects: list[str] = (), people: list[str] = ()) -> str:
+    clauses = [f"alma.all_for_ui={_quoted(' '.join(keywords))}"]
+    if subjects:
+        # AND keeps a broad heading like "History" from flooding the results.
+        clauses.append("(" + " AND ".join(f"alma.subjects={_quoted(s)}" for s in subjects) + ")")
+    clauses += [f"alma.creator={_quoted(p)}" for p in people]
+    return " OR ".join(clauses)
+
+
+async def search(cql: str, limit: int = 10) -> bytes:
     params = {
         "version": "1.2",
         "operation": "searchRetrieve",
         "recordSchema": "marcxml",
         "maximumRecords": limit,
-        "query": cql_query(q),
+        "query": cql,
     }
     async with httpx.AsyncClient(timeout=15) as client:
         res = await client.get(UMD["base_url"], params=params)

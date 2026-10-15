@@ -59,3 +59,35 @@
 .availability {
   font-size: 0.95rem;
 }
+
+.searched {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.searched h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.searched dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 1rem;
+  margin: 0;
+}
+
+.searched dt {
+  font-weight: 600;
+}
+
+.searched dd {
+  margin: 0;
+}
+
+@media (max-width: 30rem) {
+  .searched dl {
+    grid-template-columns: 1fr;
+  }
+}

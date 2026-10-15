@@ -37,8 +37,20 @@ def test_parses_electronic_records():
 
 
 def test_cql_query_quotes_and_escapes_input():
-    assert cql_query("oysters") == 'alma.all_for_ui="oysters"'
-    assert cql_query('say "hi" \\ now') == 'alma.all_for_ui="say \\"hi\\" \\\\ now"'
+    assert cql_query(["oysters"]) == 'alma.all_for_ui="oysters"'
+    assert cql_query(['say "hi"', "\\", "now"]) == 'alma.all_for_ui="say \\"hi\\" \\\\ now"'
+
+
+def test_cql_query_ors_keywords_subjects_and_people():
+    assert cql_query(["climate", "change"], ["Climatic changes"], ["Toni Morrison"]) == (
+        'alma.all_for_ui="climate change" OR (alma.subjects="Climatic changes") OR alma.creator="Toni Morrison"'
+    )
+
+
+def test_cql_query_requires_all_subject_headings_together():
+    assert cql_query(["history", "jazz", "music"], ["History", "Jazz"]) == (
+        'alma.all_for_ui="history jazz music" OR (alma.subjects="History" AND alma.subjects="Jazz")'
+    )
 
 
 def test_falls_back_to_corporate_author():

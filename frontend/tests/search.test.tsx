@@ -103,3 +103,21 @@ test("availability distinguishes Alma statuses and skips missing call numbers", 
   screen.getByText("Check holdings at UMD: McKeldin, QH2 .B2");
   expect(screen.queryByText(/null/)).toBeNull();
 });
+
+test("results show what was searched, including LCSH headings and possible authors", async () => {
+  const searched = { keywords: ["Toni", "Morrison", "slavery"], subjects: ["Slavery"], people: ["Toni Morrison"] };
+  const { container } = render(<ResultsList query="novels by Toni Morrison about slavery" result={{ ...results, searched }} />);
+  const section = screen.getByRole("region", { name: "What we searched" });
+  within(section).getByText("Toni Morrison slavery");
+  within(section).getByText("Slavery");
+  within(section).getByText("Toni Morrison");
+  await expectNoAxeViolations(container);
+});
+
+test("what was searched is shown even with no results, and says when no subject heading matched", () => {
+  const searched = { keywords: ["zzzz"], subjects: [], people: [] };
+  render(<ResultsList query="zzzz" result={{ total: 0, records: [], searched }} />);
+  const section = screen.getByRole("region", { name: "What we searched" });
+  within(section).getByText(/no matching subject headings/i);
+  expect(within(section).queryByText(/possible authors/i)).toBeNull();
+});
