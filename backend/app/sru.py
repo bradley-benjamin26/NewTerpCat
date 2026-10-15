@@ -10,6 +10,28 @@ UMD = {
     "base_url": "https://usmai-umcp.alma.exlibrisgroup.com/view/sru/01USMAI_UMCP",
     "record_url_template": "https://usmai-umcp.alma.exlibrisgroup.com/discovery/fulldisplay?docid=alma{mms_id}&vid=01USMAI_UMCP:UMCP",
 }
+# Big Ten catalogs with a verified SRU endpoint (specDocuments/externalSystemUrls.md). No record links:
+# results only say where a book can be borrowed through interlibrary loan.
+BTAA = [
+    {"key": "rutgers", "name": "Rutgers University", "region": "east_coast",
+     "base_url": "https://rutgers.primo.exlibrisgroup.com/view/sru/01RUT_INST"},
+    {"key": "nebraska", "name": "University of Nebraska-Lincoln", "region": "midwest",
+     "base_url": "https://unl.primo.exlibrisgroup.com/view/sru/01UON_LINC"},
+    {"key": "washington", "name": "University of Washington", "region": "west_coast",
+     "base_url": "https://orbiscascade-washington.primo.exlibrisgroup.com/view/sru/01ALLIANCE_UW"},
+    {"key": "minnesota", "name": "University of Minnesota", "region": "midwest",
+     "base_url": "https://primo.lib.umn.edu/view/sru/01UMN_INST"},
+    {"key": "oregon", "name": "University of Oregon", "region": "west_coast",
+     "base_url": "https://alliance-uoregon.primo.exlibrisgroup.com/view/sru/01ALLIANCE_UO"},
+    {"key": "purdue", "name": "Purdue University", "region": "midwest",
+     "base_url": "https://purdue.primo.exlibrisgroup.com/view/sru/01PURDUE_PUWL"},
+    {"key": "northwestern", "name": "Northwestern University", "region": "midwest",
+     "base_url": "https://search.library.northwestern.edu/view/sru/01NWU_INST"},
+    {"key": "ucla", "name": "UCLA", "region": "west_coast",
+     "base_url": "https://search.library.ucla.edu/view/sru/01UCS_LAL"},
+    {"key": "usc", "name": "University of Southern California", "region": "west_coast",
+     "base_url": "https://uosc.primo.exlibrisgroup.com/view/sru/01USC_INST"},
+]
 
 NS = {"srw": "http://www.loc.gov/zing/srw/", "marc": "http://www.loc.gov/MARC21/slim"}
 TRAILING = " /:;,."
@@ -81,7 +103,7 @@ def pool_queries(parts: list[dict]) -> list[str]:
     return [*narrow[:MAX_NARROW], cql_query(parts)]
 
 
-async def search(cql: str, limit: int = 50) -> bytes:
+async def search(cql: str, base_url: str = UMD["base_url"], limit: int = 50) -> bytes:
     params = {
         "version": "1.2",
         "operation": "searchRetrieve",
@@ -90,7 +112,7 @@ async def search(cql: str, limit: int = 50) -> bytes:
         "query": cql,
     }
     async with httpx.AsyncClient(timeout=15) as client:
-        res = await client.get(UMD["base_url"], params=params)
+        res = await client.get(base_url, params=params)
         res.raise_for_status()
         return res.content
 
@@ -110,7 +132,7 @@ def _heading(field) -> str:
     return "--".join(t.rstrip(TRAILING) for t in [name, *(text for code, text in sf if code in {"v", "x", "y", "z"})])
 
 
-def _record(rec) -> dict:
+def _record(rec, library: dict | None) -> dict:
     mms_id = rec.findtext("marc:controlfield[@tag='001']", namespaces=NS)
     title = " ".join(_subfields(rec, "245", "ab")).rstrip(TRAILING)
     names = _subfields(rec, "100", "ab") or _subfields(rec, "110", "ab") or _subfields(rec, "111", "a")
@@ -123,7 +145,7 @@ def _record(rec) -> dict:
     for ava in rec.findall("marc:datafield[@tag='AVA']", NS):
         sf = {s.get("code"): s.text for s in ava.findall("marc:subfield", NS)}
         holdings.append({"location": sf.get("c"), "call_number": sf.get("d"), "status": sf.get("e")})
-    return {
+    record = {
         "id": mms_id,
         "title": title,
         "author": author,
@@ -133,12 +155,22 @@ def _record(rec) -> dict:
         "holdings": holdings,
         "subjects": subjects,
         "oclc": oclc,
+        "umd": True,
+        "btaa": [],
     }
+    if library:
+        # Only a copy on the shelf counts: online copies are licensed to that university's own users.
+        available = any(h["status"] == "available" for h in holdings)
+        place = {"name": library["name"], "region": library["region"], "available": available}
+        record |= {"id": f"{library['key']}:{mms_id}", "url": None, "online": False, "holdings": [],
+                   "umd": False, "btaa": [place]}
+    return record
 
 
-def parse_response(xml: bytes) -> dict:
+def parse_response(xml: bytes, library: dict | None = None) -> dict:
+    """Records from an SRU response; library is a BTAA entry, or None for UMD."""
     root = ET.fromstring(xml)
     return {
         "total": int(root.findtext("srw:numberOfRecords", "0", NS)),
-        "records": [_record(r) for r in root.iterfind(".//marc:record", NS)],
+        "records": [_record(r, library) for r in root.iterfind(".//marc:record", NS)],
     }

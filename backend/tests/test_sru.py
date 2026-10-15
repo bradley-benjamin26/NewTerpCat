@@ -1,8 +1,10 @@
+import asyncio
 from pathlib import Path
 
+import httpx
 import pytest
 
-from app.sru import cql_query, parse_response, pool_queries
+from app.sru import BTAA, cql_query, parse_response, pool_queries, search
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -36,6 +38,45 @@ def test_parses_electronic_records():
     assert result["records"][0]["author"] == "United States. Congress. Senate. Committee on Commerce"
     assert result["records"][1]["author"] == "Macleod, James Farquharson"
     assert result["records"][0]["date"] == "1943"
+
+
+def test_umd_records_are_marked_umd():
+    rec = parse_response((FIXTURES / "sru_umd_print.xml").read_bytes())["records"][0]
+    assert rec["umd"] is True
+    assert rec["btaa"] == []
+
+
+def test_btaa_record_lists_the_library_without_links_or_shelf_details():
+    rec = parse_response((FIXTURES / "sru_umd_print.xml").read_bytes(), BTAA[0])["records"][0]
+    assert rec["id"] == "rutgers:990020965100108238"
+    assert rec["url"] is None
+    assert rec["holdings"] == []
+    assert rec["online"] is False
+    assert rec["umd"] is False
+    assert rec["btaa"] == [{"name": "Rutgers University", "region": "east_coast", "available": True}]
+
+
+def test_btaa_online_copy_is_not_available():
+    recs = parse_response((FIXTURES / "sru_umd.xml").read_bytes(), BTAA[0])["records"]
+    assert [r["btaa"][0]["available"] for r in recs] == [False, False, False]
+
+
+def test_btaa_lists_nine_verified_libraries():
+    assert len(BTAA) == 9
+    assert all(lib["base_url"].startswith("https://") for lib in BTAA)
+    assert {lib["region"] for lib in BTAA} == {"east_coast", "midwest", "west_coast"}
+
+
+def test_search_uses_the_given_catalog(monkeypatch):
+    seen = {}
+
+    async def fake_get(self, url, params):
+        seen["url"] = url
+        return httpx.Response(200, content=b"<x/>", request=httpx.Request("GET", url))
+
+    monkeypatch.setattr(httpx.AsyncClient, "get", fake_get)
+    asyncio.run(search("x", "https://example.org/sru"))
+    assert seen["url"] == "https://example.org/sru"
 
 
 def part(keywords, headings=(), people=(), operator=None):
