@@ -15,9 +15,11 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
   const query = typeof q === "string" ? q.trim() : "";
   if (!query) redirect("/");
 
-  const res = await fetch(`${API_URL}/search?${new URLSearchParams({ q: query })}`, { cache: "no-store" }).catch(
-    () => null,
-  );
+  // 20 s covers the backend's own limits: catalog 15 s + subject lookup 3 s.
+  const res = await fetch(`${API_URL}/search?${new URLSearchParams({ q: query })}`, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(20_000),
+  }).catch(() => null);
   const body = await res?.json().catch(() => null);
   // A 422 carries a hint about the query itself (e.g. "jazz OR NOT rock").
   const hint = res?.status === 422 && typeof body?.detail === "string" ? body.detail : null;
