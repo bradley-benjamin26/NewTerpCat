@@ -167,6 +167,36 @@ def _record(rec, library: dict | None) -> dict:
     return record
 
 
+def _details(rec) -> dict:
+    """The fields only the item page shows."""
+    def one(tag, codes):
+        return " ".join(_subfields(rec, tag, codes)).rstrip(TRAILING) or None
+
+    def every(tags, codes="a"):
+        fields = (f for f in rec.findall("marc:datafield", NS) if f.get("tag") in tags)
+        texts = (" ".join(sf.text or "" for sf in f.findall("marc:subfield", NS) if sf.get("code") in codes) for f in fields)
+        return [t.rstrip(TRAILING) for t in texts if t]
+
+    contents = one("505", "a")
+    return {
+        "publication": one("264", "abc") or one("260", "abc"),
+        "edition": one("250", "a"),
+        "description": one("300", "abc"),
+        "series": one("490", "av"),
+        "summary": one("520", "a"),
+        "isbns": every({"020"}),
+        "contributors": every({"700", "710"}, "ab"),
+        "contents": [c.strip(TRAILING) for c in contents.split(" -- ")] if contents else [],
+        "notes": every({"500", "504"}),
+    }
+
+
+def record(xml: bytes, library: dict | None = None) -> dict | None:
+    """The first record in an SRU response with its full details, or None when there is none."""
+    rec = ET.fromstring(xml).find(".//marc:record", NS)
+    return None if rec is None else _record(rec, library) | _details(rec)
+
+
 def parse_response(xml: bytes, library: dict | None = None) -> dict:
     """Records from an SRU response; library is a BTAA entry, or None for UMD."""
     root = ET.fromstring(xml)

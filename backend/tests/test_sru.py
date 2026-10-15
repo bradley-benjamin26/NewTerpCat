@@ -1,12 +1,51 @@
 import asyncio
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import httpx
 import pytest
 
-from app.sru import BTAA, cql_query, parse_response, pool_queries, search
+from app.sru import BTAA, _details, cql_query, parse_response, pool_queries, record, search
 
 FIXTURES = Path(__file__).parent / "fixtures"
+FULL = (FIXTURES / "sru_record_full.xml").read_bytes()
+EMPTY = b'<searchRetrieveResponse xmlns="http://www.loc.gov/zing/srw/"><numberOfRecords>0</numberOfRecords></searchRetrieveResponse>'
+
+
+def test_record_reads_every_detail_field():
+    r = record(FULL)
+    assert r["title"] == "The Chesapeake oyster : a history"
+    assert r["holdings"][0]["call_number"] == "SH371 .K44 2020"
+    assert r["publication"] == "Baltimore : Johns Hopkins University Press, 2020"
+    assert r["edition"] == "Second edition"
+    assert r["description"] == "xii, 320 pages : illustrations ; 24 cm"
+    assert r["series"] == "Chesapeake books ; 12"
+    assert r["isbns"] == ["9781421437576", "1421437570"]
+    assert r["contributors"] == ["Breitburg, Denise", "Maryland Sea Grant"]
+    assert r["summary"] == "A history of the oyster in the bay"
+    assert r["contents"] == ["Origins", "The fishery", "Restoration"]
+    assert r["notes"] == ["Includes index", "Includes bibliographical references"]
+
+
+def test_details_are_empty_when_the_record_has_none():
+    rec = ET.fromstring(
+        '<record xmlns="http://www.loc.gov/MARC21/slim"><controlfield tag="001">1</controlfield>'
+        '<datafield tag="245"><subfield code="a">Untitled</subfield></datafield></record>'
+    )
+    assert _details(rec) == {
+        "publication": None, "edition": None, "description": None, "series": None, "summary": None,
+        "isbns": [], "contributors": [], "contents": [], "notes": [],
+    }
+
+
+def test_record_from_a_big_ten_library_keeps_its_id():
+    r = record(FULL, BTAA[0])
+    assert r["id"] == "rutgers:990036740560108238"
+    assert r["btaa"][0]["available"] is True
+
+
+def test_record_is_none_when_nothing_matches():
+    assert record(EMPTY) is None
 
 
 def test_parses_print_record_with_holdings():
