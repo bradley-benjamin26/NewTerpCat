@@ -56,6 +56,11 @@ def test_btaa_record_lists_the_library_without_links_or_shelf_details():
     assert rec["btaa"] == [{"name": "Rutgers University", "region": "east_coast", "available": True}]
 
 
+def test_oclc_number_drops_leading_zeros():
+    xml = (FIXTURES / "sru_umd_print.xml").read_bytes().replace(b"(OCoLC)29201900", b"(OCoLC)0029201900")
+    assert parse_response(xml)["records"][0]["oclc"] == "29201900"
+
+
 def test_btaa_online_copy_is_not_available():
     recs = parse_response((FIXTURES / "sru_umd.xml").read_bytes(), BTAA[0])["records"]
     assert [r["btaa"][0]["available"] for r in recs] == [False, False, False]

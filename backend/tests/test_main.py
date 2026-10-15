@@ -4,6 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app import main
+from app.sru import BTAA
 
 FIXTURE = (Path(__file__).parent / "fixtures" / "sru_umd_print.xml").read_bytes()
 
@@ -251,3 +252,77 @@ def test_custom_weights_change_the_scores(monkeypatch):
 def test_invalid_weights_are_rejected(weights):
     res = TestClient(main.app).get("/search", params={"q": "oysters", "weights": weights})
     assert res.status_code == 422
+
+
+def big_ten_fetch(calls, down=False, xml=FIXTURE):
+    """UMD answers with the print fixture; each Big Ten catalog with the same book, or not at all."""
+
+    async def fake_fetch(cql, base_url=None):
+        calls.append((base_url, cql))
+        if base_url and down:
+            raise main.httpx.ConnectError("unreachable")
+        return xml if base_url else FIXTURE
+
+    return fake_fetch
+
+
+def test_without_btaa_only_umd_is_searched(monkeypatch):
+    calls = []
+    monkeypatch.setattr(main, "fetch", big_ten_fetch(calls))
+    body = TestClient(main.app).get("/search", params={"q": "oysters"}).json()
+    assert {url for url, _ in calls} == {None}
+    assert "libraries" not in body
+
+
+def test_btaa_searches_every_big_ten_catalog_with_two_queries(monkeypatch):
+    calls = []
+    monkeypatch.setattr(main, "fetch", big_ten_fetch(calls))
+    TestClient(main.app).get("/search", params={"q": "oysters", "btaa": "1"})
+    for lib in BTAA:
+        assert [cql for url, cql in calls if url == lib["base_url"]] == [
+            'alma.title all "oysters"',
+            'alma.all_for_ui all "oysters"',
+        ]
+
+
+def test_a_book_held_by_umd_and_big_ten_appears_once(monkeypatch):
+    monkeypatch.setattr(main, "fetch", big_ten_fetch([]))
+    body = TestClient(main.app).get("/search", params={"q": "oysters", "btaa": "1"}).json()
+    assert len(body["records"]) == 1
+    book = body["records"][0]
+    assert book["umd"] is True
+    assert book["url"].startswith("https://usmai-umcp")
+    assert [b["name"] for b in book["btaa"]] == [lib["name"] for lib in BTAA]
+    assert body["total"] == 1  # UMD's count, never summed across libraries
+    assert body["libraries"] == [{"name": lib["name"], "total": 1} for lib in BTAA]
+
+
+def test_a_big_ten_outage_is_reported_and_the_search_still_answers(monkeypatch):
+    monkeypatch.setattr(main, "fetch", big_ten_fetch([], down=True))
+    res = TestClient(main.app).get("/search", params={"q": "oysters", "btaa": "1"})
+    assert res.status_code == 200
+    assert res.json()["records"][0]["umd"] is True
+    assert [lib["total"] for lib in res.json()["libraries"]] == [None] * len(BTAA)
+
+
+def test_big_ten_gets_only_the_full_query_when_there_are_no_narrow_ones(monkeypatch):
+    calls = []
+    monkeypatch.setattr(main, "fetch", big_ten_fetch(calls))
+    monkeypatch.setattr(main, "pool_queries", lambda searched: ['alma.all_for_ui all "oysters"'])
+    TestClient(main.app).get("/search", params={"q": "oysters", "btaa": "1"})
+    assert [cql for url, cql in calls if url == BTAA[0]["base_url"]] == ['alma.all_for_ui all "oysters"']
+
+
+def test_the_same_book_without_a_matching_oclc_number_appears_once(monkeypatch):
+    other_record = FIXTURE.replace(b"(OCoLC)29201900", b"(OCoLC)555")
+    monkeypatch.setattr(main, "fetch", big_ten_fetch([], xml=other_record))
+    body = TestClient(main.app).get("/search", params={"q": "oysters", "btaa": "1"}).json()
+    assert len(body["records"]) == 1  # same title, author and year
+    assert len(body["records"][0]["btaa"]) == len(BTAA)
+
+
+def test_another_edition_stays_separate(monkeypatch):
+    other_edition = FIXTURE.replace(b"(OCoLC)29201900", b"(OCoLC)555").replace(b"1992", b"2001")
+    monkeypatch.setattr(main, "fetch", big_ten_fetch([], xml=other_edition))
+    body = TestClient(main.app).get("/search", params={"q": "oysters", "btaa": "1"}).json()
+    assert len(body["records"]) == 2

@@ -138,7 +138,7 @@ def _record(rec, library: dict | None) -> dict:
     names = _subfields(rec, "100", "ab") or _subfields(rec, "110", "ab") or _subfields(rec, "111", "a")
     author = " ".join(names).rstrip(TRAILING) or None
     subjects = [_heading(f) for f in rec.findall("marc:datafield", NS) if f.get("tag") in SUBJECT_TAGS]
-    oclc = next((m.group(1) for a in rec.iterfind("marc:datafield[@tag='035']/marc:subfield[@code='a']", NS)
+    oclc = next((m.group(1).lstrip("0") for a in rec.iterfind("marc:datafield[@tag='035']/marc:subfield[@code='a']", NS)
                  if (m := re.match(r"\(OCoLC\)\D*(\d+)", a.text or ""))), None)
     year = re.search(r"\d{4}", " ".join(_subfields(rec, "264", "c") or _subfields(rec, "260", "c")))
     holdings = []

@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException
 from app.analyze import _nlp, analyze
 from app.lcsh import subjects
 from app.rank import WEIGHTS, score
-from app.sru import parse_response, pool_queries
+from app.sru import BTAA, parse_response, pool_queries
 from app.sru import search as fetch
 from app.worldcat import holding_counts
 
@@ -33,11 +33,29 @@ async def _searched(operator: str | None, text: str) -> dict:
     }
 
 
-async def _optional(cql: str) -> bytes | None:
+async def _optional(cql: str, *base_url: str) -> bytes | None:
     try:
-        return await fetch(cql)
+        return await fetch(cql, *base_url)
     except httpx.HTTPError:
-        return None  # a narrow query only adds candidates; the full query still answers
+        return None  # a narrow query or a Big Ten catalog only adds candidates; UMD's full query still answers
+
+
+def _merge(books: list[dict], index: dict, records: list[dict]) -> None:
+    """One entry per book: the UMD record when there is one, listing every Big Ten holder. A book matches by
+    OCLC number, or by title, author and year, since libraries often catalog the same book under different
+    OCLC numbers (one per format or reprint) or none."""
+    for r in records:
+        keys = [r["id"], " ".join(re.findall(r"\w+", f"{r['title']} {r['author']} {r['date']}".casefold()))]
+        keys += [r["oclc"]] if r["oclc"] else []
+        i = next((index[k] for k in keys if k in index), None)
+        if i is None:
+            i = len(books)
+            books.append(r)
+        else:
+            old = books[i]
+            base = r if r["umd"] and not old["umd"] else old
+            books[i] = {**base, "btaa": list({b["name"]: b for b in old["btaa"] + r["btaa"]}.values())}
+        index |= dict.fromkeys(keys, i)
 
 
 def _weights(raw: str) -> dict:
@@ -55,7 +73,7 @@ def _weights(raw: str) -> dict:
 
 
 @app.get("/search")
-async def search(q: str, weights: str = "{}"):
+async def search(q: str, weights: str = "{}", btaa: bool = False):
     weights = _weights(weights)
     q = q.strip()
     if not q:
@@ -78,16 +96,35 @@ async def search(q: str, weights: str = "{}"):
         *narrow, full = pool_queries(searched)
     except ValueError as e:
         raise HTTPException(422, str(e))
+    # Each Big Ten catalog gets the full query and the first narrow one: enough for the best matches, at
+    # 2 requests per library rather than 5.
+    libraries = BTAA if btaa else []
     try:
-        *extra, xml = await asyncio.gather(*map(_optional, narrow), fetch(full))
+        extra, big_ten, xml = await asyncio.gather(
+            asyncio.gather(*map(_optional, narrow)),
+            asyncio.gather(*(
+                asyncio.gather(*(_optional(cql, lib["base_url"]) for cql in [*narrow[:1], full]))
+                for lib in libraries
+            )),
+            fetch(full),
+        )
     except httpx.HTTPError:
         raise HTTPException(502, "The library catalog is not responding. Try again shortly.")
     result = parse_response(xml)
-    pool = {r["id"]: r for page in [result, *map(parse_response, filter(None, extra))] for r in page["records"]}
-    ranked = sorted(pool.values(), key=lambda r: score(r, searched, weights=weights)["score"], reverse=True)[:SHOWN]
+    books, index = [], {}
+    for page in [result, *map(parse_response, filter(None, extra))]:
+        _merge(books, index, page["records"])
+    found = []
+    for lib, pages in zip(libraries, big_ten):
+        pages = [p and parse_response(p, lib) for p in pages]
+        for page in filter(None, pages):
+            _merge(books, index, page["records"])
+        found.append({"name": lib["name"], "total": pages[-1] and pages[-1]["total"]})  # the full query's count
+    ranked = sorted(books, key=lambda r: score(r, searched, weights=weights)["score"], reverse=True)[:SHOWN]
     # shortcut: WorldCat counts only for the shown records (one call each), so its bonus of at most
     # 10 points can't lift a record from below the cut; fetch counts for more if that matters.
     counts = await holding_counts([r["oclc"] for r in ranked if r["oclc"]])
     ranked = [{**r, **score(r, searched, counts.get(r["oclc"]), weights)} for r in ranked]
     ranked.sort(key=lambda r: r["score"], reverse=True)
-    return {"total": result["total"], "records": ranked, "searched": searched}
+    body = {"total": result["total"], "records": ranked, "searched": searched}
+    return body | {"libraries": found} if btaa else body
