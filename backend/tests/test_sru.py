@@ -252,3 +252,13 @@ def test_pool_title_query_falls_back_to_all_keywords_when_only_a_name_was_typed(
 def test_pool_gives_every_or_branch_narrow_queries():
     parts = [part(["jazz"], [["A", "B", "C", "D", "E"]]), part(["oysters"], operator="OR")]
     assert 'alma.title all "oysters"' in pool_queries(parts)
+
+
+def test_details_read_enhanced_contents_notes():
+    # Newer records list each chapter in $t (title) and $r (author), with no $a.
+    rec = ET.fromstring(
+        '<record xmlns="http://www.loc.gov/MARC21/slim"><datafield tag="505">'
+        '<subfield code="t">Origins /</subfield><subfield code="r">Victor Kennedy --</subfield>'
+        '<subfield code="t">The fishery.</subfield></datafield></record>'
+    )
+    assert _details(rec)["contents"] == ["Origins / Victor Kennedy", "The fishery"]

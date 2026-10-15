@@ -177,7 +177,7 @@ def _details(rec) -> dict:
         texts = (" ".join(sf.text or "" for sf in f.findall("marc:subfield", NS) if sf.get("code") in codes) for f in fields)
         return [t.rstrip(TRAILING) for t in texts if t]
 
-    contents = one("505", "a")
+    contents = one("505", "agrt")  # enhanced notes put chapters in $t and $r, with no $a
     return {
         "publication": one("264", "abc") or one("260", "abc"),
         "edition": one("250", "a"),
