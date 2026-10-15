@@ -34,6 +34,11 @@
     * app/search/page.tsx -- results page; calls the backend
     * app/SearchForm.tsx -- search box
     * app/ResultsList.tsx -- results list, relevance breakdown per result, and "What we searched" panel
+    * app/relevance/ -- relevance settings page: users change the points per ranking rule, saved in a "weights" cookie that the search page sends to the backend
+        * page.tsx -- the page; reads the saved points
+        * RelevanceForm.tsx -- the points form (client component)
+        * actions.ts -- server action that checks and saves or resets the points
+        * rules.ts -- rule labels and default points (mirror WEIGHTS in backend/app/rank.py)
     * tests/ -- Vitest + Testing Library tests, with axe accessibility checks
 * specDocuments -- contains contextual information
     * catalogServices.md -- describes services patrons can use in the catalog

@@ -133,7 +133,7 @@ export default function ResultsList({ query, result }: { query: string; result: 
       {searched}
       <p>
         Sorted by relevance score, best first, showing {result.records.length}. Open “Relevance” under a result
-        to see how its points add up.
+        to see how its points add up, or change the points in <a href="/relevance">relevance settings</a>.
       </p>
       <ol className={styles.results}>
         {result.records.map((r) => (

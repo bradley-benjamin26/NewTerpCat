@@ -3,6 +3,7 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import axe from "axe-core";
 import SearchForm from "../app/SearchForm";
 import ResultsList, { type SearchResult } from "../app/ResultsList";
+import Home from "../app/page";
 
 afterEach(cleanup);
 
@@ -184,4 +185,12 @@ test("each result shows its relevance score and how the points add up", async ()
   within(second).getByText("Relevance: 0 points");
   within(second).getByText(/no ranking rules matched/i);
   await expectNoAxeViolations(container);
+});
+
+test("home page and results link to the relevance settings", () => {
+  render(<Home />);
+  expect(screen.getByRole("link", { name: /relevance settings/i }).getAttribute("href")).toBe("/relevance");
+  cleanup();
+  render(<ResultsList query="climate" result={results} />);
+  expect(screen.getByRole("link", { name: /relevance settings/i }).getAttribute("href")).toBe("/relevance");
 });

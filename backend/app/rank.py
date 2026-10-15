@@ -13,9 +13,9 @@ WEIGHTS = {
     "subjects_few": 10,
     "keywords_elsewhere": 5,
     "available_umd": 20,
-    "holdings": 2,  # per other library, up to HOLDINGS_MAX
+    "holdings": 2,  # per other library, counting up to HOLDINGS_MAX libraries
 }
-HOLDINGS_MAX = 10
+HOLDINGS_MAX = 5
 
 
 def _words(s: str) -> list[str]:
@@ -27,8 +27,10 @@ def _contains(words: list[str], phrase: list[str]) -> bool:
     return any(words[i : i + n] == phrase for i in range(len(words) - n + 1))
 
 
-def score(record: dict, searched: list[dict], holdings: int | None = None) -> dict:
-    """Points for each relevancy rule the record meets, from the parts of the query it should match."""
+def score(record: dict, searched: list[dict], holdings: int | None = None, weights: dict | None = None) -> dict:
+    """Points for each relevancy rule the record meets, from the parts of the query it should match.
+    weights overrides some or all of WEIGHTS."""
+    weights = {**WEIGHTS, **(weights or {})}
     parts = [p for p in searched if p["operator"] != "NOT"]
     queries = [_words(" ".join(p["keywords"])) for p in parts]
     keywords = set().union(*queries)
@@ -44,20 +46,21 @@ def score(record: dict, searched: list[dict], holdings: int | None = None) -> di
     breakdown = []
 
     def add(rule: str, label: str, points: int | None = None):
-        breakdown.append({"rule": rule, "label": label, "points": WEIGHTS[rule] if points is None else points})
+        breakdown.append({"rule": rule, "label": label, "points": weights[rule] if points is None else points})
 
-    if any(q in (title, _words(record["title"].split(":")[0])) for q in queries):
+    # A rule set to 0 is off, so it must not block the partial-match rules below it.
+    if weights["exact_title"] and any(q in (title, _words(record["title"].split(":")[0])) for q in queries):
         add("exact_title", "Exact title match")
     else:
         if len(in_title) >= 2:
             add("title_words", f"{len(in_title)} search words in the title")
         if any(len(q) >= 2 and _contains(title, q) for q in queries):
             add("phrase", "Search words appear together in the title")
-    if author and any(sorted(_words(p)) == sorted(author) for part in parts for p in part["people"]):
+    if weights["exact_author"] and author and any(sorted(_words(p)) == sorted(author) for part in parts for p in part["people"]):
         add("exact_author", "Exact author match")
     elif keywords & set(author):
         add("author_words", "Search words in the author's name")
-    if len(matched) >= 2:
+    if weights["subjects_many"] and len(matched) >= 2:
         add("subjects_many", f"Subject headings match: {'; '.join(sorted(matched))}")
     elif matched:
         add("subjects_few", f"Subject heading matches: {matched[0]}")
@@ -66,7 +69,7 @@ def score(record: dict, searched: list[dict], holdings: int | None = None) -> di
     if record["online"] or any(h["status"] == "available" for h in record["holdings"]):
         add("available_umd", "Available at UMD")
     if holdings and holdings > 1:
-        bonus = min(HOLDINGS_MAX, WEIGHTS["holdings"] * (holdings - 1))
         others = holdings - 1
-        add("holdings", f"Held by {others:,} other {'library' if others == 1 else 'libraries'} (WorldCat)", bonus)
+        label = f"Held by {others:,} other {'library' if others == 1 else 'libraries'} (WorldCat)"
+        add("holdings", label, weights["holdings"] * min(others, HOLDINGS_MAX))
     return {"score": sum(b["points"] for b in breakdown), "breakdown": breakdown}

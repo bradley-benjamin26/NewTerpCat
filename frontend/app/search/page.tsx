@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import ResultsList, { type SearchResult } from "../ResultsList";
 import SearchForm from "../SearchForm";
+import { COOKIE } from "../relevance/rules";
 
 const API_URL = process.env.API_URL ?? "http://localhost:8000";
 
@@ -14,14 +17,17 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
   const q = (await searchParams).q;
   const query = typeof q === "string" ? q.trim() : "";
   if (!query) redirect("/");
+  const params = new URLSearchParams({ q: query });
+  const weights = (await cookies()).get(COOKIE)?.value;
+  if (weights) params.set("weights", weights); // the backend checks it
 
   // 25 s covers the backend's own limits: two subject lookups at 3 s each, catalog 15 s, WorldCat token + counts at 2 s each.
-  const res = await fetch(`${API_URL}/search?${new URLSearchParams({ q: query })}`, {
+  const res = await fetch(`${API_URL}/search?${params}`, {
     cache: "no-store",
     signal: AbortSignal.timeout(25_000),
   }).catch(() => null);
   const body = await res?.json().catch(() => null);
-  // A 422 carries a hint about the query itself (e.g. "jazz OR NOT rock").
+  // A 422 carries a hint about the query (e.g. "jazz OR NOT rock") or about saved relevance points.
   const hint = res?.status === 422 && typeof body?.detail === "string" ? body.detail : null;
   return (
     <main>
@@ -29,7 +35,16 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
       {res?.ok ? (
         <ResultsList query={query} result={body as SearchResult} />
       ) : (
-        <p role="alert">{hint ?? "The library catalog is not responding. Try again shortly."}</p>
+        <p role="alert">
+          {hint ?? "The library catalog is not responding. Try again shortly."}
+          {/* Saved points can go stale if a rule is renamed; saving the settings page again fixes them. */}
+          {weights && hint?.startsWith("Relevance points") && (
+            <>
+              {" "}
+              Save them again in <Link href="/relevance">relevance settings</Link>.
+            </>
+          )}
+        </p>
       )}
     </main>
   );

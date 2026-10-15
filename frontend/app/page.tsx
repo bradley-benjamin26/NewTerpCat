@@ -5,6 +5,7 @@ export default function Home() {
     <main style={{ minHeight: "80vh", display: "grid", placeContent: "center", justifyItems: "center", gap: "1.5rem" }}>
       <h1>NewTerpCat</h1>
       <SearchForm />
+      <a href="/relevance">Relevance settings</a>
     </main>
   );
 }

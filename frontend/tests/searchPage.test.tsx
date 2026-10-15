@@ -1,10 +1,16 @@
 import { afterEach, expect, test, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import SearchPage, { generateMetadata } from "../app/search/page";
+
+const jar = new Map<string, string>();
+vi.mock("next/headers", () => ({
+  cookies: async () => ({ get: (name: string) => (jar.has(name) ? { name, value: jar.get(name) } : undefined) }),
+}));
 
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  jar.clear();
 });
 
 const props = { searchParams: Promise.resolve({ q: "oysters" }), params: Promise.resolve({}) };
@@ -32,4 +38,31 @@ test("shows the backend's hint when the query can't be searched", async () => {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ detail }), { status: 422 })));
   render(await SearchPage(props));
   expect(screen.getByRole("alert").textContent).toBe(detail);
+});
+
+test("sends the relevance points saved in the browser to the backend", async () => {
+  jar.set("weights", '{"exact_title":7}');
+  const fetchMock = vi.fn().mockRejectedValue(new TypeError("fetch failed"));
+  vi.stubGlobal("fetch", fetchMock);
+  await SearchPage(props);
+  const url = new URL(fetchMock.mock.calls[0][0]);
+  expect(url.searchParams.get("q")).toBe("oysters");
+  expect(url.searchParams.get("weights")).toBe('{"exact_title":7}');
+});
+
+test("uses the default points when none are saved", async () => {
+  const fetchMock = vi.fn().mockRejectedValue(new TypeError("fetch failed"));
+  vi.stubGlobal("fetch", fetchMock);
+  await SearchPage(props);
+  expect(new URL(fetchMock.mock.calls[0][0]).searchParams.has("weights")).toBe(false);
+});
+
+test("rejected saved points come with a link to fix them", async () => {
+  jar.set("weights", '{"old_rule":5}');
+  const detail = "Relevance points must be whole numbers from 0 to 200.";
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ detail }), { status: 422 })));
+  render(await SearchPage(props));
+  const alert = screen.getByRole("alert");
+  expect(alert.textContent).toContain(detail);
+  expect(within(alert).getByRole("link", { name: /relevance settings/i }).getAttribute("href")).toBe("/relevance");
 });

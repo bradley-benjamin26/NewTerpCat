@@ -234,3 +234,20 @@ def test_failed_narrow_query_keeps_the_full_results(monkeypatch):
     res = TestClient(main.app).get("/search", params={"q": "oysters"})
     assert res.status_code == 200
     assert len(res.json()["records"]) == 3
+
+
+def test_custom_weights_change_the_scores(monkeypatch):
+    async def fake_fetch(cql):
+        return ELECTRONIC
+
+    monkeypatch.setattr(main, "fetch", fake_fetch)
+    body = TestClient(main.app).get("/search", params={"q": "oysters", "weights": '{"keywords_elsewhere": 50}'}).json()
+    rules = {b["rule"]: b["points"] for r in body["records"] for b in r["breakdown"]}
+    assert rules["keywords_elsewhere"] == 50
+    assert rules["available_umd"] == 20  # rules left out keep their default
+
+
+@pytest.mark.parametrize("weights", ["not json", "[]", '{"bogus": 1}', '{"exact_title": -1}', '{"exact_title": 201}', '{"exact_title": 2.5}', '{"exact_title": true}'])
+def test_invalid_weights_are_rejected(weights):
+    res = TestClient(main.app).get("/search", params={"q": "oysters", "weights": weights})
+    assert res.status_code == 422
