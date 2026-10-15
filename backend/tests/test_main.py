@@ -326,3 +326,36 @@ def test_another_edition_stays_separate(monkeypatch):
     monkeypatch.setattr(main, "fetch", big_ten_fetch([], xml=other_edition))
     body = TestClient(main.app).get("/search", params={"q": "oysters", "btaa": "1"}).json()
     assert len(body["records"]) == 2
+
+
+def test_umd_print_and_ebook_records_stay_separate(monkeypatch):
+    ebook = FIXTURE.replace(b"(OCoLC)29201900", b"(OCoLC)555").replace(b"990020965100108238", b"990000000000108238")
+
+    async def fake_fetch(cql, base_url=None):
+        return ebook if cql.startswith("alma.title") else FIXTURE
+
+    monkeypatch.setattr(main, "fetch", fake_fetch)
+    body = TestClient(main.app).get("/search", params={"q": "oysters"}).json()
+    assert len(body["records"]) == 2  # UMD's own copies are separate records, as before Big Ten search
+
+
+def test_records_without_author_or_date_never_merge_by_title():
+    def rec(id, umd=False):
+        return {"id": id, "oclc": None, "title": "Annual report", "author": None, "date": None,
+                "umd": umd, "btaa": [{"name": id, "region": "midwest", "available": True}]}
+
+    books, index = [], {}
+    main._merge(books, index, [rec("umd1", umd=True)])
+    main._merge(books, index, [rec("rutgers:1"), rec("purdue:2")])
+    assert len(books) == 3
+
+
+def test_a_big_ten_catalog_sending_a_web_page_is_treated_as_not_responding(monkeypatch):
+    async def fake_fetch(cql, base_url=None):
+        return b"<html><body>Down for maintenance" if base_url else FIXTURE
+
+    monkeypatch.setattr(main, "fetch", fake_fetch)
+    res = TestClient(main.app).get("/search", params={"q": "oysters", "btaa": "1"})
+    assert res.status_code == 200
+    assert res.json()["records"][0]["umd"] is True
+    assert [lib["total"] for lib in res.json()["libraries"]] == [None] * len(BTAA)
