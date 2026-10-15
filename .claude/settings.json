@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -ril \"ponytail\" ~/.claude /Users/bbradle1/Documents/projects/NewTerpCat 2>/dev/null | head -20; ls ~/.claude/skills ~/.claude/agents 2>/dev/null)",
+      "Read(//Users/bbradle1/.claude/**)",
+      "Read(//Users/bbradle1/.claude/skills/**)",
+      "Bash(cat .claude/settings.json; echo ---; grep -i -n \"ponytail\" AGENTS.md; echo ---; ls -R ~/.claude/skills/synced | head -50)",
+      "Read(//Users/bbradle1/.claude/skills/synced/**)",
+      "Bash(mkdir -p /private/tmp/claude-504/-Users-bbradle1-Documents-projects-NewTerpCat/6bcb3969-e4a8-4fb8-b9d8-520267fa339a/scratchpad/ponytail)",
+      "Bash(git clone *)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/green-claude-audit.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

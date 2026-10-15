@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><searchRetrieveResponse xmlns="http://www.loc.gov/zing/srw/">
+  <version>1.2</version>
+  <numberOfRecords>1</numberOfRecords>
+  <records>
+    <record>
+      <recordSchema>marcxml</recordSchema>
+      <recordPacking>xml</recordPacking>
+      <recordData>
+        <record xmlns="http://www.loc.gov/MARC21/slim">
+          <leader>     nam a2200373Ia 45 0</leader>
+          <controlfield tag="001">990020965100108238</controlfield>
+          <controlfield tag="005">20040513212727.0</controlfield>
+          <controlfield tag="008">931027s1992    mduab    b   s000 0 eng d</controlfield>
+          <datafield ind1=" " ind2=" " tag="035">
+            <subfield code="a">(Aleph)002096510MAI01</subfield>
+          </datafield>
+          <datafield ind1="9" ind2=" " tag="035">
+            <subfield code="a">CP0029201900</subfield>
+          </datafield>
+          <datafield ind1="9" ind2=" " tag="035">
+            <subfield code="a">FS0029201900</subfield>
+          </datafield>
+          <datafield ind1="9" ind2=" " tag="035">
+            <subfield code="a">SS0029201900</subfield>
+          </datafield>
+          <datafield ind1="9" ind2=" " tag="035">
+            <subfield code="a">UB0029201900</subfield>
+          </datafield>
+          <datafield ind1="9" ind2=" " tag="035">
+            <subfield code="a">CE0029201900</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="035">
+            <subfield code="a">(OCoLC)29201900</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="035">
+            <subfield code="a">(EXLNZ-01USMAI_NETWORK)9910124288308236</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="040">
+            <subfield code="a">MFS</subfield>
+            <subfield code="c">MFS</subfield>
+            <subfield code="d">UMC</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="043">
+            <subfield code="a">n-us-md</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="049">
+            <subfield code="a">UMCM</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="090">
+            <subfield code="a">SH365.M3</subfield>
+            <subfield code="b">S55 1992</subfield>
+          </datafield>
+          <datafield ind1="1" ind2=" " tag="100">
+            <subfield code="a">Smith, Gary Frederick.</subfield>
+          </datafield>
+          <datafield ind1="1" ind2="0" tag="245">
+            <subfield code="a">Monitoring Maryland's Chesapeake Bay oysters :</subfield>
+            <subfield code="b">a comprehensive characterization of modified fall survey results, 1990-1991 /</subfield>
+            <subfield code="c">Gary F. Smith and Stephen J. Jordan.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="260">
+            <subfield code="a">[Annapolis, Md.] :</subfield>
+            <subfield code="b">Chesapeake Bay Research and Monitoring Division,</subfield>
+            <subfield code="c">1992.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="300">
+            <subfield code="a">xii, 93 p. :</subfield>
+            <subfield code="b">ill., maps ;</subfield>
+            <subfield code="c">28 cm.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="500">
+            <subfield code="a">"CBRM-OX-93-3."</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="500">
+            <subfield code="a">"September 1992."</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="504">
+            <subfield code="a">Bibliography (p. 77-78).</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="0" tag="650">
+            <subfield code="a">Oysters.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="0" tag="650">
+            <subfield code="a">Oyster culture</subfield>
+            <subfield code="z">Maryland.</subfield>
+          </datafield>
+          <datafield ind1="1" ind2=" " tag="700">
+            <subfield code="a">Jordan, Stephen J.</subfield>
+          </datafield>
+          <datafield ind1="1" ind2=" " tag="710">
+            <subfield code="a">Maryland.</subfield>
+            <subfield code="b">Chesapeake Bay Research and Monitoring Division.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="949">
+            <subfield code="a">UMCM</subfield>
+            <subfield code="b">31430035114646</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="950">
+            <subfield code="a">AUTH RELOAD</subfield>
+            <subfield code="c">20060712</subfield>
+            <subfield code="h">0724</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="950">
+            <subfield code="a">AUTH EXTRACT</subfield>
+            <subfield code="c">20200722</subfield>
+            <subfield code="h">1734</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="951">
+            <subfield code="a">002096510</subfield>
+            <subfield code="9">LOCAL</subfield>
+          </datafield>
+          <datafield ind1="9" ind2="5" tag="997">
+            <subfield code="a">031716A</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="998">
+            <subfield code="a">PRC: 11/10/93 13:53:08</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="AVA">
+            <subfield code="0">990020965100108238</subfield>
+            <subfield code="8">22295884590008238</subfield>
+            <subfield code="a">01USMAI_UMCP</subfield>
+            <subfield code="b">CPSPE</subfield>
+            <subfield code="c">Maryland Folio</subfield>
+            <subfield code="d">SH365.M3 S55 1992</subfield>
+            <subfield code="e">available</subfield>
+            <subfield code="f">1</subfield>
+            <subfield code="g">0</subfield>
+            <subfield code="j">MDFOL</subfield>
+            <subfield code="k">0</subfield>
+            <subfield code="p">1</subfield>
+            <subfield code="q">UMCP HBK Maryland Room(CPSPE)</subfield>
+          </datafield>
+        </record>
+      </recordData>
+      <recordIdentifier>990020965100108238</recordIdentifier>
+      <recordPosition>1</recordPosition>
+    </record>
+  </records>
+  <extraResponseData xmlns:xb="http://www.exlibris.com/repository/search/xmlbeans/">
+    <xb:exact>true</xb:exact>
+    <xb:responseDate>2026-10-15T15:24:36-0400</xb:responseDate>
+  </extraResponseData>
+</searchRetrieveResponse>

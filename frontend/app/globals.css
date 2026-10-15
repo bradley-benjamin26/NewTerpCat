@@ -1,0 +1,46 @@
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --muted: #4a4a4a;
+  --border: #6b6b6b;
+  --accent: #c8102e; /* UMD red, 5.9:1 against white */
+  --focus: #1a4fb4;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #121212;
+    --foreground: #ededed;
+    --muted: #c2c2c2;
+    --border: #9a9a9a;
+    --focus: #ffd200;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--foreground);
+  background: var(--background);
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+main {
+  width: min(60rem, 100%);
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+a {
+  color: inherit;
+}
+
+a:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}

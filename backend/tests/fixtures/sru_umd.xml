@@ -1,0 +1,449 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><searchRetrieveResponse xmlns="http://www.loc.gov/zing/srw/">
+  <version>1.2</version>
+  <numberOfRecords>505</numberOfRecords>
+  <records>
+    <record>
+      <recordSchema>marcxml</recordSchema>
+      <recordPacking>xml</recordPacking>
+      <recordData>
+        <record xmlns="http://www.loc.gov/MARC21/slim">
+          <leader>     nam a2200493Mi 45 0</leader>
+          <controlfield tag="001">990063362830108238</controlfield>
+          <controlfield tag="005">20230615023358.0</controlfield>
+          <controlfield tag="006">m     o  d</controlfield>
+          <controlfield tag="007">cr c||||||||||</controlfield>
+          <controlfield tag="008">080619s1943    dcu     o    f000 0 eng d</controlfield>
+          <datafield ind1=" " ind2=" " tag="035">
+            <subfield code="a">(Aleph)006336283MAI01</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="035">
+            <subfield code="a">(OCoLC)1065648379</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="035">
+            <subfield code="a">(EXLNZ-01USMAI_NETWORK)9910300144508236</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="040">
+            <subfield code="a">WYU</subfield>
+            <subfield code="b">eng</subfield>
+            <subfield code="e">pn</subfield>
+            <subfield code="c">WYU</subfield>
+            <subfield code="d">OCLCO</subfield>
+            <subfield code="d">OCLCQ</subfield>
+            <subfield code="d">MvI</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="049">
+            <subfield code="a">ONLN</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="074">
+            <subfield code="a">9999 (online)</subfield>
+          </datafield>
+          <datafield ind1="0" ind2=" " tag="086">
+            <subfield code="a">Y 1.1/2:SERIAL 10757</subfield>
+          </datafield>
+          <datafield ind1="0" ind2=" " tag="086">
+            <subfield code="a">78-1:S.RP.444</subfield>
+          </datafield>
+          <datafield ind1="1" ind2=" " tag="110">
+            <subfield code="a">United States.</subfield>
+            <subfield code="b">Congress.</subfield>
+            <subfield code="b">Senate.</subfield>
+            <subfield code="b">Committee on Commerce</subfield>
+            <subfield code="g">(1825-1946)</subfield>
+          </datafield>
+          <datafield ind1="1" ind2="0" tag="245">
+            <subfield code="a">"Removal of Oysters from the Waters of York River and Queen Creek, Va., Affected by Sewage Disposal Emanating from the Construction Battalion Training Camp at Camp Peary, Va." October 5 (legislative day, September 15), 1943. -- Ordered to be printed.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="1" tag="264">
+            <subfield code="a">Washington, DC :</subfield>
+            <subfield code="b">[publisher not identified],</subfield>
+            <subfield code="c">1943.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="300">
+            <subfield code="a">1 online resource (4 pages).</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="336">
+            <subfield code="a">text</subfield>
+            <subfield code="b">txt</subfield>
+            <subfield code="2">rdacontent</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="337">
+            <subfield code="a">computer</subfield>
+            <subfield code="b">c</subfield>
+            <subfield code="2">rdamedia</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="338">
+            <subfield code="a">online resource</subfield>
+            <subfield code="b">cr</subfield>
+            <subfield code="2">rdacarrier</subfield>
+          </datafield>
+          <datafield ind1="1" ind2=" " tag="490">
+            <subfield code="a">Senate report / 78th Congress, 1st session. Senate ;</subfield>
+            <subfield code="v">no. 444</subfield>
+          </datafield>
+          <datafield ind1="1" ind2=" " tag="490">
+            <subfield code="a">[United States congressional serial set] ;</subfield>
+            <subfield code="v">[serial set no. 10757]</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="500">
+            <subfield code="a">Batch processed record: Metadata reviewed, not verified. Some fields updated by batch processes.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="500">
+            <subfield code="a">FDLP item number not assigned.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="0" tag="650">
+            <subfield code="a">Federal aid.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="0" tag="650">
+            <subfield code="a">Legislative amendments.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="0" tag="650">
+            <subfield code="a">Navy-yards and naval stations.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="0" tag="650">
+            <subfield code="a">Oysters.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="0" tag="650">
+            <subfield code="a">Bodies of water.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="0" tag="650">
+            <subfield code="a">Rivers.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="0" tag="650">
+            <subfield code="a">Sewage.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="0" tag="650">
+            <subfield code="a">Waste disposal in rivers, lakes, etc.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="0" tag="650">
+            <subfield code="a">Water</subfield>
+            <subfield code="x">Pollution.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="7" tag="655">
+            <subfield code="a">Legislative materials.</subfield>
+            <subfield code="2">lcgft</subfield>
+          </datafield>
+          <datafield ind1="1" ind2=" " tag="700">
+            <subfield code="a">McCarran, Pat,</subfield>
+            <subfield code="d">1876-1954</subfield>
+            <subfield code="u">Democrat (NV)</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="0" tag="830">
+            <subfield code="a">United States congressional serial set ;</subfield>
+            <subfield code="v">serial set no. 10757.</subfield>
+          </datafield>
+          <datafield ind1="1" ind2=" " tag="810">
+            <subfield code="a">United States.</subfield>
+            <subfield code="b">Congress.</subfield>
+            <subfield code="b">Senate.</subfield>
+            <subfield code="t">Report ;</subfield>
+            <subfield code="v">78th Congress, no. 444.</subfield>
+          </datafield>
+          <datafield ind1="4" ind2="0" tag="856">
+            <subfield code="u">https://purl.fdlp.gov/GPO/gpo209676</subfield>
+            <subfield code="7">0</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="922">
+            <subfield code="a">SERIALSETDELIVERY3B</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="922">
+            <subfield code="a">BATCHPROCESSED</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="923">
+            <subfield code="a">SERIALSET-10757_00_00-002-0444-0000</subfield>
+            <subfield code="b">10757_00_00</subfield>
+            <subfield code="c">002</subfield>
+            <subfield code="g">0444</subfield>
+            <subfield code="h">0000</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="950">
+            <subfield code="a">MARCIVE FULL</subfield>
+            <subfield code="c">20230615</subfield>
+            <subfield code="h">0233</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="951">
+            <subfield code="a">006336283</subfield>
+            <subfield code="9">LOCAL</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="AVE">
+            <subfield code="8">53323136640008238</subfield>
+            <subfield code="e">Available</subfield>
+            <subfield code="l">CPNET</subfield>
+            <subfield code="a">01USMAI_UMCP</subfield>
+            <subfield code="0">990063362830108238</subfield>
+          </datafield>
+        </record>
+      </recordData>
+      <recordIdentifier>990063362830108238</recordIdentifier>
+      <recordPosition>1</recordPosition>
+    </record>
+    <record>
+      <recordSchema>marcxml</recordSchema>
+      <recordPacking>xml</recordPacking>
+      <recordData>
+        <record xmlns="http://www.loc.gov/MARC21/slim">
+          <leader>01893cam a22004211i 4500</leader>
+          <controlfield tag="001">9963910313108238</controlfield>
+          <controlfield tag="005">20240618211307.0</controlfield>
+          <controlfield tag="006">m     o  d</controlfield>
+          <controlfield tag="007">cr |n|---uuuuu</controlfield>
+          <controlfield tag="008">241122s1890    snc     o    0000 0 eng d</controlfield>
+          <datafield ind1=" " ind2=" " tag="035">
+            <subfield code="a">(UkMbAM-D)E-AMD00026616</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="035">
+            <subfield code="a">(CKB)4920000001909501</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="035">
+            <subfield code="a">(EXLCZ)994920000001909501</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="040">
+            <subfield code="a">UkMbAM-D</subfield>
+            <subfield code="b">eng</subfield>
+            <subfield code="e">rda</subfield>
+            <subfield code="c">StDuBDS</subfield>
+            <subfield code="d">UkMbAM-D</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="099">
+            <subfield code="a">GA_M-776-14_1890_11</subfield>
+          </datafield>
+          <datafield ind1="1" ind2=" " tag="100">
+            <subfield code="a">Macleod, James Farquharson,</subfield>
+            <subfield code="d">1836-1894,</subfield>
+            <subfield code="e">author.</subfield>
+          </datafield>
+          <datafield ind1="1" ind2="0" tag="245">
+            <subfield code="a">[James Macleod's letter to his wife about dressing for a dinner that evening].</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="0" tag="264">
+            <subfield code="a">Regina :</subfield>
+            <subfield code="b">James Macleod,</subfield>
+            <subfield code="c">1890.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="300">
+            <subfield code="a">1 online resource.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="336">
+            <subfield code="a">text</subfield>
+            <subfield code="2">rdacontent</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="337">
+            <subfield code="a">computer</subfield>
+            <subfield code="2">rdamedia</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="338">
+            <subfield code="a">online resource</subfield>
+            <subfield code="2">rdacarrier</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="542">
+            <subfield code="f">Glenbow Museum</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="534">
+            <subfield code="p">Reproduction of:</subfield>
+            <subfield code="t">[James Macleod's letter to his wife about dressing for a dinner that evening]</subfield>
+            <subfield code="c">25 Nov 1890.</subfield>
+          </datafield>
+          <datafield ind1="1" ind2=" " tag="535">
+            <subfield code="a">Glenbow Museum</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="500">
+            <subfield code="a">Title from publisher's website.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="500">
+            <subfield code="a">AMDigital Reference: M-776-14a</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="500">
+            <subfield code="a">From: Macleod, James F. Family</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="520">
+            <subfield code="a">James Macleod about dressing for a dinner that evening, with a mention of eating several oysters before hand.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="588">
+            <subfield code="a">Description based on publisher metadata (viewed November 22, 2024).</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="0" tag="653">
+            <subfield code="a">Arts &amp; Entertainment</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="5" tag="653">
+            <subfield code="a">Canada</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="5" tag="653">
+            <subfield code="a">Saskatchewan</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="5" tag="653">
+            <subfield code="a">Regina</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="1" tag="653">
+            <subfield code="a">Macleod, James Farquharson</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="1" tag="653">
+            <subfield code="a">Macleod, Mary</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="0" tag="653">
+            <subfield code="a">Food and Nutrition; Clothing; Leisure, Entertainment and Social Life</subfield>
+          </datafield>
+          <datafield ind1="1" ind2="7" tag="600">
+            <subfield code="a">Macleod, James Farquharson,</subfield>
+            <subfield code="d">1836-1894</subfield>
+            <subfield code="2">fast</subfield>
+            <subfield code="0">(OCoLC)fst00455378</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="7" tag="650">
+            <subfield code="a">Clothing and dress.</subfield>
+            <subfield code="2">fast</subfield>
+            <subfield code="0">(OCoLC)fst00864680</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="7" tag="650">
+            <subfield code="a">Food.</subfield>
+            <subfield code="2">fast</subfield>
+            <subfield code="0">(OCoLC)fst00930458</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="7" tag="650">
+            <subfield code="a">Leisure.</subfield>
+            <subfield code="2">fast</subfield>
+            <subfield code="0">(OCoLC)fst00996018</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="7" tag="651">
+            <subfield code="a">Saskatchewan</subfield>
+            <subfield code="z">Regina.</subfield>
+            <subfield code="2">fast</subfield>
+            <subfield code="0">(OCoLC)fst01226485</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="7" tag="655">
+            <subfield code="a">Correspondence.</subfield>
+            <subfield code="2">fast</subfield>
+            <subfield code="0">(OCoLC)fst02003288</subfield>
+          </datafield>
+          <datafield ind1="2" ind2=" " tag="710">
+            <subfield code="a">Glenbow Museum,</subfield>
+            <subfield code="e">owner.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="906">
+            <subfield code="a">DOCUMENT</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="AVE">
+            <subfield code="8">53359034720008238</subfield>
+            <subfield code="c">61323192380008238</subfield>
+            <subfield code="e">Available</subfield>
+            <subfield code="m">Frontier Life: Borderlands, Settlement and Colonial Encounters</subfield>
+            <subfield code="t">AM (Adam Matthew)</subfield>
+            <subfield code="a">01USMAI_UMCP</subfield>
+            <subfield code="0">9963910313108238</subfield>
+          </datafield>
+        </record>
+      </recordData>
+      <recordIdentifier>9963910313108238</recordIdentifier>
+      <recordPosition>2</recordPosition>
+    </record>
+    <record>
+      <recordSchema>marcxml</recordSchema>
+      <recordPacking>xml</recordPacking>
+      <recordData>
+        <record xmlns="http://www.loc.gov/MARC21/slim">
+          <leader>01685nam a2200349 i 4500</leader>
+          <controlfield tag="001">9963919986608238</controlfield>
+          <controlfield tag="008">231013s1751    xx     |o     000 ||eng d</controlfield>
+          <datafield ind1=" " ind2=" " tag="035">
+            <subfield code="a">(UkMbAM-D)AH1-AMD00001471</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="035">
+            <subfield code="a">(CKB)4100000011845859</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="035">
+            <subfield code="a">(EXLCZ)994100000011845859</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="040">
+            <subfield code="a">UkMbAM-D</subfield>
+            <subfield code="b">eng</subfield>
+            <subfield code="e">rda</subfield>
+            <subfield code="c">UkMbAM-D</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="099">
+            <subfield code="a">GLC03107.02800</subfield>
+          </datafield>
+          <datafield ind1="1" ind2=" " tag="100">
+            <subfield code="a">Livingston, Philip,</subfield>
+            <subfield code="d">1716-1778,</subfield>
+            <subfield code="e">author.</subfield>
+          </datafield>
+          <datafield ind1="1" ind2="0" tag="245">
+            <subfield code="a">Account of Robert Livingston with Philip Livingston, August-December 1751.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="0" tag="264">
+            <subfield code="a">[Place of production not identified :</subfield>
+            <subfield code="b">producer not identified,</subfield>
+            <subfield code="c">1751]</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="300">
+            <subfield code="a">1 online resource.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="336">
+            <subfield code="a">text</subfield>
+            <subfield code="2">rdacontent</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="337">
+            <subfield code="a">computer</subfield>
+            <subfield code="2">rdamedia</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="338">
+            <subfield code="a">online resource</subfield>
+            <subfield code="2">rdacarrier</subfield>
+          </datafield>
+          <datafield ind1="0" ind2=" " tag="588">
+            <subfield code="a">Description based on publisher-supplied metadata (viewed October 13, 2023).</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="520">
+            <subfield code="a">List of goods and amount paid for them, including molasses, pork and oysters.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="542">
+            <subfield code="f">The Gilder Lehrman Institute of American History</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="500">
+            <subfield code="a">Collection: The Livingston Family Papers.</subfield>
+          </datafield>
+          <datafield ind1="1" ind2=" " tag="535">
+            <subfield code="a">Gilder Lehrman Institute of American History</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="7" tag="650">
+            <subfield code="a">Finance.</subfield>
+            <subfield code="2">fast</subfield>
+            <subfield code="0">(OCoLC)fst00924349</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="7" tag="655">
+            <subfield code="a">Records (Documents)</subfield>
+            <subfield code="2">fast</subfield>
+            <subfield code="0">(OCoLC)fst01919961</subfield>
+          </datafield>
+          <datafield ind1="1" ind2="7" tag="600">
+            <subfield code="a">Livingston, Philip,</subfield>
+            <subfield code="d">1716-1778</subfield>
+            <subfield code="2">fast</subfield>
+            <subfield code="0">(OCoLC)fst00173238</subfield>
+          </datafield>
+          <datafield ind1="2" ind2=" " tag="710">
+            <subfield code="a">Gilder Lehrman Institute of American History,</subfield>
+            <subfield code="e">owner.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="906">
+            <subfield code="a">BOOK</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="AVE">
+            <subfield code="8">53362315050008238</subfield>
+            <subfield code="c">61323177810008238</subfield>
+            <subfield code="e">Available</subfield>
+            <subfield code="m">American History Module I: Settlement, Commerce, Revolution and Reform: 1493-1859</subfield>
+            <subfield code="t">AM (Adam Matthew)</subfield>
+            <subfield code="a">01USMAI_UMCP</subfield>
+            <subfield code="0">9963919986608238</subfield>
+          </datafield>
+        </record>
+      </recordData>
+      <recordIdentifier>9963919986608238</recordIdentifier>
+      <recordPosition>3</recordPosition>
+    </record>
+  </records>
+  <nextRecordPosition>4</nextRecordPosition>
+  <extraResponseData xmlns:xb="http://www.exlibris.com/repository/search/xmlbeans/">
+    <xb:exact>true</xb:exact>
+    <xb:responseDate>2026-10-15T15:24:30-0400</xb:responseDate>
+  </extraResponseData>
+</searchRetrieveResponse>
