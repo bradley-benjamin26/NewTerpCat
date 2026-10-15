@@ -66,3 +66,19 @@ test("rejected saved points come with a link to fix them", async () => {
   expect(alert.textContent).toContain(detail);
   expect(within(alert).getByRole("link", { name: /relevance settings/i }).getAttribute("href")).toBe("/relevance");
 });
+
+test("forwards the Big Ten choice to the backend and keeps the box checked", async () => {
+  const fetchMock = vi.fn().mockRejectedValue(new TypeError("fetch failed"));
+  vi.stubGlobal("fetch", fetchMock);
+  render(await SearchPage({ ...props, searchParams: Promise.resolve({ q: "oysters", btaa: "1" }) }));
+  expect(new URL(fetchMock.mock.calls[0][0]).searchParams.get("btaa")).toBe("1");
+  expect((screen.getByRole("checkbox", { name: "Include Big Ten libraries" }) as HTMLInputElement).checked).toBe(true);
+});
+
+test("searches UMD only unless the Big Ten box was checked", async () => {
+  const fetchMock = vi.fn().mockRejectedValue(new TypeError("fetch failed"));
+  vi.stubGlobal("fetch", fetchMock);
+  render(await SearchPage(props));
+  expect(new URL(fetchMock.mock.calls[0][0]).searchParams.has("btaa")).toBe(false);
+  expect((screen.getByRole("checkbox", { name: "Include Big Ten libraries" }) as HTMLInputElement).checked).toBe(false);
+});

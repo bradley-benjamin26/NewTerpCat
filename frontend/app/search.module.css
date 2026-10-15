@@ -33,8 +33,23 @@
   cursor: pointer;
 }
 
+.form .check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 400;
+}
+
+.check input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
 .row input:focus-visible,
-.row button:focus-visible {
+.row button:focus-visible,
+.check input:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
