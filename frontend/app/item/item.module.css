@@ -1,0 +1,76 @@
+.item h1 {
+  margin: 1.5rem 0 0.25rem;
+  max-width: 42rem;
+  font-size: 1.6rem;
+  line-height: 1.25;
+}
+
+.item p,
+.item ul {
+  max-width: 42rem;
+}
+
+.item h2 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+/* The one standout: where the book is and the number to take to the shelf. */
+.where {
+  max-width: 42rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+}
+
+.where h2 {
+  margin-top: 0;
+}
+
+.where ul {
+  margin: 0 0 0.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.where li + li {
+  margin-top: 0.5rem;
+}
+
+.callNumber {
+  display: block;
+  font-size: 1.4rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.details {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 1rem;
+  max-width: 42rem;
+  margin: 0;
+}
+
+.details > div {
+  display: contents;
+}
+
+.details dt {
+  font-weight: 600;
+}
+
+.details dd {
+  margin: 0;
+}
+
+@media (max-width: 30rem) {
+  .details {
+    grid-template-columns: 1fr;
+  }
+
+  .details dd {
+    margin-bottom: 0.5rem;
+  }
+}

@@ -1,7 +1,8 @@
+import Link from "next/link";
 import styles from "./search.module.css";
 
-type Holding = { location: string | null; call_number: string | null; status: string | null };
-type CatalogRecord = {
+export type Holding = { location: string | null; call_number: string | null; status: string | null };
+export type CatalogRecord = {
   id: string;
   title: string;
   author: string | null;
@@ -25,7 +26,7 @@ export type SearchResult = { total: number; records: CatalogRecord[]; searched?:
 
 const JOINS = { AND: "AND: must also match", OR: "OR: or match this instead", NOT: "NOT: leave out records with" };
 
-const STATUS: Record<string, string> = {
+export const STATUS: Record<string, string> = {
   available: "Available",
   unavailable: "Unavailable",
   check_holdings: "Check holdings",
@@ -169,7 +170,9 @@ export default function ResultsList({ query, result }: { query: string; result: 
       <ol className={styles.results}>
         {result.records.map((r) => (
           <li key={r.id}>
-            <h2>{r.url ? <a href={r.url}>{r.title}</a> : r.title}</h2>
+            <h2>
+              <Link href={`/item/${encodeURIComponent(r.id)}`}>{r.title}</Link>
+            </h2>
             <p>{[r.author, r.date].filter(Boolean).join(" · ")}</p>
             {availability(r).map((line, i) => (
               <p key={i} className={styles.availability}>
