@@ -2,7 +2,7 @@ from app.rank import score
 
 
 def rec(**fields):
-    return {"title": "", "author": None, "subjects": [], "holdings": [], "online": False, **fields}
+    return {"title": "", "author": None, "subjects": [], "holdings": [], "online": False, "btaa": [], **fields}
 
 
 def part(keywords, people=(), headings=(), operator=None):
@@ -64,6 +64,35 @@ def test_available_at_umd_in_print_or_online():
     assert points(rec(holdings=available), [part(["x"])]) == {"available_umd": 20}
     assert points(rec(online=True), [part(["x"])]) == {"available_umd": 20}
     assert points(rec(holdings=unavailable), [part(["x"])]) == {}
+
+
+def btaa(name, region, available=True):
+    return {"name": name, "region": region, "available": available}
+
+
+def test_closest_available_big_ten_library_scores():
+    places = [btaa("UCLA", "west_coast"), btaa("Purdue University", "midwest"),
+              btaa("Rutgers University", "east_coast", available=False)]
+    result = score(rec(umd=False, btaa=places), [part(["x"])])
+    assert points(rec(umd=False, btaa=places), [part(["x"])]) == {"available_midwest": 10}
+    assert "Purdue University" in result["breakdown"][0]["label"]
+    assert "interlibrary loan" in result["breakdown"][0]["label"]
+
+
+def test_umd_availability_beats_big_ten():
+    available = [{"location": "Stacks", "call_number": "X", "status": "available"}]
+    record = rec(holdings=available, btaa=[btaa("Rutgers University", "east_coast")])
+    assert points(record, [part(["x"])]) == {"available_umd": 20}
+
+
+def test_region_rule_set_to_zero_lets_the_next_region_score():
+    record = rec(umd=False, btaa=[btaa("Rutgers University", "east_coast"), btaa("UCLA", "west_coast")])
+    assert points(record, [part(["x"])], weights={"available_east_coast": 0}) == {"available_west_coast": 5}
+
+
+def test_unavailable_everywhere_scores_no_availability_bonus():
+    record = rec(umd=False, btaa=[btaa("Rutgers University", "east_coast", available=False)])
+    assert points(record, [part(["x"])]) == {}
 
 
 def test_worldcat_holdings_score_two_per_other_library_up_to_ten():

@@ -6,9 +6,11 @@ type CatalogRecord = {
   title: string;
   author: string | null;
   date: string | null;
-  url: string;
+  url: string | null;
   online: boolean;
   holdings: Holding[];
+  umd: boolean;
+  btaa: { name: string; region: string; available: boolean }[];
   score: number;
   breakdown: { rule: string; label: string; points: number }[];
 };
@@ -18,7 +20,8 @@ type Searched = {
   subjects: { phrase: string; headings: string[] }[];
   people: string[];
 };
-export type SearchResult = { total: number; records: CatalogRecord[]; searched?: Searched[] };
+type Library = { name: string; total: number | null };
+export type SearchResult = { total: number; records: CatalogRecord[]; searched?: Searched[]; libraries?: Library[] };
 
 const JOINS = { AND: "AND: must also match", OR: "OR: or match this instead", NOT: "NOT: leave out records with" };
 
@@ -29,15 +32,25 @@ const STATUS: Record<string, string> = {
 };
 
 function availability(r: CatalogRecord): string[] {
+  const ill = r.btaa.filter((b) => b.available).map((b) => b.name).join(", ");
+  if (!r.umd)
+    return [
+      ill
+        ? `Not held at UMD. Available through interlibrary loan from: ${ill}`
+        : "Not held at UMD. Held at Big Ten libraries, none currently available.",
+    ];
   const lines = r.holdings.map(
     (h) =>
       `${STATUS[h.status ?? ""] ?? "Check holdings"} at UMD: ${[h.location, h.call_number].filter(Boolean).join(", ")}`,
   );
   if (r.online) lines.push("Available online");
-  return lines.length ? lines : ["Availability unknown: see the full record"];
+  if (!lines.length) lines.push("Availability unknown: see the full record");
+  if (ill) lines.push(`Also available through interlibrary loan from: ${ill}`);
+  return lines;
 }
 
-const points = (n: number) => `${n} ${n === 1 ? "point" : "points"}`;
+const plural = (n: number, word: string, many = `${word}s`) => `${n.toLocaleString()} ${n === 1 ? word : many}`;
+const points = (n: number) => plural(n, "point");
 
 function Relevance({ r }: { r: CatalogRecord }) {
   return (
@@ -93,7 +106,22 @@ function Part({ part }: { part: Searched }) {
   );
 }
 
-function SearchedFor({ searched }: { searched: Searched[] }) {
+function BigTen({ libraries }: { libraries: Library[] }) {
+  return (
+    <>
+      <h3>Big Ten libraries</h3>
+      <ul>
+        {libraries.map((l) => (
+          <li key={l.name}>
+            {l.name}: {l.total === null ? "didn't respond" : plural(l.total, "match", "matches")}
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+function SearchedFor({ searched, libraries }: { searched: Searched[]; libraries?: Library[] }) {
   return (
     <section aria-labelledby="searched-heading" className={styles.searched}>
       <h2 id="searched-heading">What we searched</h2>
@@ -112,13 +140,16 @@ function SearchedFor({ searched }: { searched: Searched[] }) {
           </ol>
         </>
       )}
+      {libraries && <BigTen libraries={libraries} />}
     </section>
   );
 }
 
 export default function ResultsList({ query, result }: { query: string; result: SearchResult }) {
-  const searched = result.searched && <SearchedFor searched={result.searched} />;
-  if (!result.total)
+  const searched = result.searched && <SearchedFor searched={result.searched} libraries={result.libraries} />;
+  // Big Ten counts overlap with UMD's and each other's, so the heading counts UMD only.
+  const count = plural(result.total, "result") + (result.libraries ? " at UMD" : "");
+  if (!result.records.length)
     return (
       <>
         <h1>No results for “{query}”</h1>
@@ -128,7 +159,7 @@ export default function ResultsList({ query, result }: { query: string; result: 
   return (
     <>
       <h1>
-        {result.total.toLocaleString()} {result.total === 1 ? "result" : "results"} for “{query}”
+        {count} for “{query}”
       </h1>
       {searched}
       <p>
@@ -138,9 +169,7 @@ export default function ResultsList({ query, result }: { query: string; result: 
       <ol className={styles.results}>
         {result.records.map((r) => (
           <li key={r.id}>
-            <h2>
-              <a href={r.url}>{r.title}</a>
-            </h2>
+            <h2>{r.url ? <a href={r.url}>{r.title}</a> : r.title}</h2>
             <p>{[r.author, r.date].filter(Boolean).join(" · ")}</p>
             {availability(r).map((line, i) => (
               <p key={i} className={styles.availability}>

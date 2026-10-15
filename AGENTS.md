@@ -22,24 +22,27 @@
     * hooks/test-green-claude-changes.sh -- self-check for that hook
     * hooks/green-claude-audit.sh -- original Write/Edit-only hook from the plugin installer; no longer used
 * backend -- FastAPI API (Python 3.13, run with uv)
-    * app/main.py -- /search endpoint: parses AND/OR/NOT, runs analysis and lookups, queries the catalog
+    * app/main.py -- /search endpoint: parses AND/OR/NOT, runs analysis and lookups, queries UMD (and the Big Ten catalogs when asked), merges copies of the same book
     * app/analyze.py -- spaCy query analysis: keywords, possible authors, noun phrases
     * app/lcsh.py -- Library of Congress Subject Headings lookup and matching
-    * app/sru.py -- builds CQL queries (full and narrow pool queries) for Alma SRU and parses MARCXML results
+    * app/sru.py -- Big Ten catalog list; builds CQL queries (full and narrow pool queries) for Alma SRU and parses MARCXML results
     * app/rank.py -- relevancy scoring with a per-rule breakdown
     * app/worldcat.py -- WorldCat holdings counts for the ranking bonus
     * tests/ -- pytest tests; fixtures/ holds sample SRU responses
 * frontend -- Next.js TypeScript web app
     * app/page.tsx -- home page with the search box
     * app/search/page.tsx -- results page; calls the backend
-    * app/SearchForm.tsx -- search box
-    * app/ResultsList.tsx -- results list, relevance breakdown per result, and "What we searched" panel
+    * app/SearchForm.tsx -- search box and "Include Big Ten libraries" checkbox
+    * app/ResultsList.tsx -- results list with UMD and interlibrary loan availability, relevance breakdown per result, and "What we searched" panel
     * app/relevance/ -- relevance settings page: users change the points per ranking rule, saved in a "weights" cookie that the search page sends to the backend
         * page.tsx -- the page; reads the saved points
         * RelevanceForm.tsx -- the points form (client component)
         * actions.ts -- server action that checks and saves or resets the points
         * rules.ts -- rule labels and default points (mirror WEIGHTS in backend/app/rank.py)
     * tests/ -- Vitest + Testing Library tests, with axe accessibility checks
+* docs/superpowers -- design work per feature
+    * specs/ -- approved designs
+    * plans/ -- implementation plans
 * specDocuments -- contains contextual information
     * catalogServices.md -- describes services patrons can use in the catalog
     * userInterface.md -- provides an overview of the user interface views

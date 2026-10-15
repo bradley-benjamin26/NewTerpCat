@@ -13,9 +13,13 @@ WEIGHTS = {
     "subjects_few": 10,
     "keywords_elsewhere": 5,
     "available_umd": 20,
+    "available_east_coast": 15,
+    "available_midwest": 10,
+    "available_west_coast": 5,
     "holdings": 2,  # per other library, counting up to HOLDINGS_MAX libraries
 }
 HOLDINGS_MAX = 5
+REGION = {"east_coast": "East Coast", "midwest": "Midwest", "west_coast": "West Coast"}
 
 
 def _words(s: str) -> list[str]:
@@ -66,8 +70,14 @@ def score(record: dict, searched: list[dict], holdings: int | None = None, weigh
         add("subjects_few", f"Subject heading matches: {matched[0]}")
     if keywords & set(_words(" ".join(subjects))):
         add("keywords_elsewhere", "Search words in the subjects")
-    if record["online"] or any(h["status"] == "available" for h in record["holdings"]):
-        add("available_umd", "Available at UMD")
+    places = [("available_umd", "Available at UMD")] if (
+        record["online"] or any(h["status"] == "available" for h in record["holdings"])
+    ) else []
+    places += [(f"available_{b['region']}",
+                f"Available at {b['name']} (Big Ten, {REGION[b['region']]}) through interlibrary loan")
+               for b in record["btaa"] if b["available"]]
+    if places:
+        add(*max(places, key=lambda p: weights[p[0]]))  # only the best place scores
     if holdings and holdings > 1:
         others = holdings - 1
         label = f"Held by {others:,} other {'library' if others == 1 else 'libraries'} (WorldCat)"

@@ -87,3 +87,12 @@ test("an invalid field is marked and described by the message", async () => {
   expect(box.getAttribute("aria-invalid")).toBe("true");
   expect(box.getAttribute("aria-describedby")).toContain(status.id);
 });
+
+test("each Big Ten region has its own availability points", async () => {
+  render(await RelevancePage());
+  const value = (name: RegExp) => (screen.getByRole("spinbutton", { name }) as HTMLInputElement).value;
+  expect(value(/available at umd/i)).toBe("20");
+  expect(value(/east coast big ten/i)).toBe("15");
+  expect(value(/midwest big ten/i)).toBe("10");
+  expect(value(/west coast big ten/i)).toBe("5");
+});

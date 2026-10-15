@@ -9,6 +9,9 @@ export const RULES = [
   { key: "subjects_few", tier: "Low relevance", points: 10, label: "One subject heading matches", hint: "A single matching Library of Congress heading" },
   { key: "keywords_elsewhere", tier: "Low relevance", points: 5, label: "Search words in the subjects", hint: "Your words appear in the record's subjects" },
   { key: "available_umd", tier: "Bonus", points: 20, label: "Available at UMD", hint: "On the shelf or online" },
+  { key: "available_east_coast", tier: "Bonus", points: 15, label: "Available at an East Coast Big Ten library", hint: "Through interlibrary loan; a book earns only its highest availability bonus" },
+  { key: "available_midwest", tier: "Bonus", points: 10, label: "Available at a Midwest Big Ten library", hint: "Through interlibrary loan; a book earns only its highest availability bonus" },
+  { key: "available_west_coast", tier: "Bonus", points: 5, label: "Available at a West Coast Big Ten library", hint: "Through interlibrary loan; a book earns only its highest availability bonus" },
   { key: "holdings", tier: "Bonus", points: 2, label: "Each other library that owns it", hint: "From WorldCat, counting up to 5 libraries" },
 ];
 export const MAX_POINTS = 200;

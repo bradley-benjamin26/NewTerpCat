@@ -14,10 +14,12 @@ export async function generateMetadata({ searchParams }: PageProps<"/search">): 
 }
 
 export default async function SearchPage({ searchParams }: PageProps<"/search">) {
-  const q = (await searchParams).q;
+  const { q, btaa: big } = await searchParams;
   const query = typeof q === "string" ? q.trim() : "";
   if (!query) redirect("/");
+  const btaa = big === "1";
   const params = new URLSearchParams({ q: query });
+  if (btaa) params.set("btaa", "1");
   const weights = (await cookies()).get(COOKIE)?.value;
   if (weights) params.set("weights", weights); // the backend checks it
 
@@ -31,7 +33,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
   const hint = res?.status === 422 && typeof body?.detail === "string" ? body.detail : null;
   return (
     <main>
-      <SearchForm defaultValue={query} />
+      <SearchForm defaultValue={query} btaa={btaa} />
       {res?.ok ? (
         <ResultsList query={query} result={body as SearchResult} />
       ) : (
