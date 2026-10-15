@@ -15,8 +15,12 @@ link to other libraries' catalogs. Requesting (ILLiad OpenURL) is step 6.
   URL and are left out.
 - **Queries.** UMD keeps its current queries (up to 4 narrow + full). Each BTAA catalog gets the full query
   plus the first narrow query: at most 18 extra requests per search.
-- **Merging.** Records are merged by OCLC number; a record without one stays separate. The UMD record is the
-  base when there is one.
+- **One entry per book.** Records are merged by OCLC number; a record without one stays separate. The UMD
+  record is the base when there is one, and the entry lists every Big Ten library holding the book. A book not
+  held at UMD looks like any other result; only its availability lines differ, and they say plainly whether
+  UMD holds it.
+- **Counts are never added across libraries.** The heading gives UMD's count; each Big Ten library's own count
+  is shown in "What we searched".
 - **Availability at a BTAA library** means an AVA field with status `available`. BTAA online copies (AVE)
   don't count: they are licensed to that university's users.
 
@@ -27,8 +31,8 @@ link to other libraries' catalogs. Requesting (ILLiad OpenURL) is step 6.
   `midwest`, `west_coast`.
 - `search(cql, base_url=UMD["base_url"])`: the SRU base URL is a parameter.
 - `parse_response(xml, library=None)`: with no library, records parse as today plus `btaa: []`. With a
-  BTAA library, each record has `url: None`, `online: False`, `holdings: []`, and
-  `btaa: [{"name", "region"}]` when it is available there, else `btaa: []`.
+  BTAA library, each record has `url: None`, `online: False`, `holdings: []`, `umd: False`, and
+  `btaa: [{"name", "region", "available"}]`. UMD records have `umd: True`.
 
 ### `app/main.py`
 - `/search` takes `btaa: bool = False`.
@@ -37,8 +41,9 @@ link to other libraries' catalogs. Requesting (ILLiad OpenURL) is step 6.
   failing is still a 502.
 - Pool key: `oclc` when present, else `"{library}:{id}"`. Merging appends the other record's `btaa` list; a
   UMD record replaces a BTAA base (keeping the merged `btaa` list).
-- `total` is the sum of the totals from catalogs that answered (counts a book once per library).
-- With `btaa`, the response adds `libraries: [{"name", "ok"}]` for the BTAA catalogs.
+- `total` stays UMD's count.
+- With `btaa`, the response adds `libraries: [{"name", "total"}]` for the BTAA catalogs; `total` is `None`
+  when the catalog didn't respond.
 
 ### `app/rank.py`
 - The availability rule becomes a region bonus; only the best one scores:
@@ -54,10 +59,13 @@ link to other libraries' catalogs. Requesting (ILLiad OpenURL) is step 6.
 - `search/page.tsx`: forwards `btaa=1` to the backend and to the form.
 - `ResultsList.tsx`:
   - Title links only when `url` is set (BTAA-only records show plain text).
-  - Under availability: "Available through interlibrary loan from: Rutgers University, UCLA" when `btaa` is
-    non-empty.
-  - Heading says "About N results" when `libraries` is present (totals overlap).
-  - "What we searched" adds the Big Ten libraries searched, and names any that didn't respond.
+  - Availability lines:
+    - Held at UMD: as today, plus "Also available through interlibrary loan from: Rutgers University, UCLA"
+      when Big Ten copies are available.
+    - Not held at UMD: "Not held at UMD. Available through interlibrary loan from: Rutgers University, UCLA",
+      or "Not held at UMD. Held at Big Ten libraries, none currently available."
+  - Heading: "N results at UMD" when `libraries` is present; unchanged otherwise.
+  - "What we searched" lists each Big Ten library with its own match count, or "didn't respond".
 - `relevance/rules.ts`: the "Available at UMD" row is joined by three Bonus rows for the regions; points
   mirror `rank.WEIGHTS`.
 
@@ -70,11 +78,12 @@ box. Library lists are plain text. axe checks run in the Vitest tests.
 
 - `test_sru.py`: BTAA parse (no URL/holdings, available vs not, AVE ignored); `search` uses the given URL.
 - `test_rank.py`: best region wins; UMD beats BTAA; region rule set to 0 lets the next one score.
-- `test_main.py`: no `btaa` → only UMD is called; `btaa` → every BTAA URL is called with 2 queries; merge by
-  OCLC keeps the UMD record and the BTAA names; a failing BTAA catalog is reported `ok: false` and the search
-  still answers.
-- Vitest: checkbox label and checked state from the URL; `btaa=1` is forwarded; ILL line; unlinked title;
-  four availability rows on the relevance page; axe.
+- `test_main.py`: no `btaa` → only UMD is called; `btaa` → every BTAA URL is called with 2 queries; a book
+  at UMD and 2 BTAA libraries appears once, keeping the UMD record and both names; `total` is UMD's; a failing
+  BTAA catalog is reported with `total: None` and the search still answers.
+- Vitest: checkbox label and checked state from the URL; `btaa=1` is forwarded; "Also available…" line for a
+  UMD book; "Not held at UMD…" lines (available / none available) with an unlinked title; per-library counts
+  in "What we searched"; four availability rows on the relevance page; axe.
 
 ## Out of scope
 
