@@ -151,7 +151,7 @@ def _record(rec, library: dict | None) -> dict:
         "author": author,
         "date": year.group() if year else None,
         "url": UMD["record_url_template"].format(mms_id=mms_id),
-        "online": rec.find("marc:datafield[@tag='AVE']", NS) is not None,
+        "online": any(e.text == "Available" for e in rec.iterfind("marc:datafield[@tag='AVE']/marc:subfield[@code='e']", NS)),
         "holdings": holdings,
         "subjects": subjects,
         "oclc": oclc,

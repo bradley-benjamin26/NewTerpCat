@@ -262,3 +262,18 @@ def test_details_read_enhanced_contents_notes():
         '<subfield code="t">The fishery.</subfield></datafield></record>'
     )
     assert _details(rec)["contents"] == ["Origins / Victor Kennedy", "The fishery"]
+
+
+def ave_record(status):
+    return (
+        '<searchRetrieveResponse xmlns="http://www.loc.gov/zing/srw/"><numberOfRecords>1</numberOfRecords>'
+        '<records><record><recordData><record xmlns="http://www.loc.gov/MARC21/slim">'
+        '<controlfield tag="001">1</controlfield><datafield tag="AVE">'
+        f'<subfield code="e">{status}</subfield></datafield></record></recordData></record></records>'
+        '</searchRetrieveResponse>'
+    ).encode()
+
+
+def test_online_only_when_the_online_copy_is_available():
+    assert parse_response(ave_record("Available"))["records"][0]["online"] is True
+    assert parse_response(ave_record("Not Available"))["records"][0]["online"] is False
