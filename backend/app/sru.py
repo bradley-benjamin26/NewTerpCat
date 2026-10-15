@@ -1,4 +1,5 @@
 import re
+from itertools import product
 import xml.etree.ElementTree as ET
 
 import httpx
@@ -18,13 +19,41 @@ def _quoted(s: str) -> str:
     return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
-def cql_query(keywords: list[str], subjects: list[str] = (), people: list[str] = ()) -> str:
-    clauses = [f"alma.all_for_ui={_quoted(' '.join(keywords))}"]
-    if subjects:
-        # AND keeps a broad heading like "History" from flooding the results.
-        clauses.append("(" + " AND ".join(f"alma.subjects={_quoted(s)}" for s in subjects) + ")")
-    clauses += [f"alma.creator={_quoted(p)}" for p in people]
-    return " OR ".join(clauses)
+def _keywords(keywords: list[str]) -> str:
+    # "all" matches the words in any order; "=" on multiple words is an exact phrase in Alma.
+    return f"alma.all_for_ui all {_quoted(' '.join(keywords))}"
+
+
+def _alternatives(part: dict) -> list[list[str]]:
+    """Ways one part of the query can match; each is a list of clauses that must all hold."""
+    alternatives = [[_keywords(part["keywords"])]]
+    alternatives += [[f"alma.creator all {_quoted(p)}"] for p in part["people"]]
+    if part["subjects"]:
+        # One heading from every phrase, so a broad heading like "History" can't flood the results.
+        combos = product(*(s["headings"] for s in part["subjects"]))
+        alternatives += [[f"alma.subjects={_quoted(h)}" for h in combo] for combo in combos]
+    return alternatives
+
+
+def _group(parts: list[dict]) -> str:
+    include = [p for p in parts if p.get("operator") != "NOT"]
+    if not include:
+        raise ValueError("NOT needs something to search for first, for example: jazz NOT blues")
+    exclude = "".join(f" NOT {_keywords(p['keywords'])}" for p in parts if p.get("operator") == "NOT")
+    combos = product(*map(_alternatives, include))
+    return " OR ".join(" AND ".join(c for alt in combo for c in alt) + exclude for combo in combos)
+
+
+def cql_query(parts: list[dict]) -> str:
+    """Parts joined by the user's AND/OR/NOT, with AND and NOT binding tighter than OR. Alma mishandles
+    parentheses but uses the same precedence, so the query is written out as an OR of ANDs."""
+    # shortcut: combinations multiply with each part and phrase; fine for typed queries, cap it if long queries appear.
+    groups = [[]]
+    for part in parts:
+        if part.get("operator") == "OR":
+            groups.append([])
+        groups[-1].append(part)
+    return " OR ".join(map(_group, groups))
 
 
 async def search(cql: str, limit: int = 10) -> bytes:

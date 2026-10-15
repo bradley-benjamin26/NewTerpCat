@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from app.sru import cql_query, parse_response
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -36,21 +38,67 @@ def test_parses_electronic_records():
     assert result["records"][0]["date"] == "1943"
 
 
+def part(keywords, headings=(), people=(), operator=None):
+    return {
+        "operator": operator,
+        "keywords": keywords,
+        "subjects": [{"phrase": "p", "headings": h} for h in headings],
+        "people": list(people),
+    }
+
+
 def test_cql_query_quotes_and_escapes_input():
-    assert cql_query(["oysters"]) == 'alma.all_for_ui="oysters"'
-    assert cql_query(['say "hi"', "\\", "now"]) == 'alma.all_for_ui="say \\"hi\\" \\\\ now"'
+    assert cql_query([part(["oysters"])]) == 'alma.all_for_ui all "oysters"'
+    assert cql_query([part(['say "hi"', "\\", "now"])]) == 'alma.all_for_ui all "say \\"hi\\" \\\\ now"'
 
 
-def test_cql_query_ors_keywords_subjects_and_people():
-    assert cql_query(["climate", "change"], ["Climatic changes"], ["Toni Morrison"]) == (
-        'alma.all_for_ui="climate change" OR (alma.subjects="Climatic changes") OR alma.creator="Toni Morrison"'
+def test_cql_query_ors_keywords_people_and_subjects():
+    assert cql_query([part(["climate", "change"], [["Climatic changes"]], ["Toni Morrison"])]) == (
+        'alma.all_for_ui all "climate change" OR alma.creator all "Toni Morrison" OR alma.subjects="Climatic changes"'
     )
 
 
-def test_cql_query_requires_all_subject_headings_together():
-    assert cql_query(["history", "jazz", "music"], ["History", "Jazz"]) == (
-        'alma.all_for_ui="history jazz music" OR (alma.subjects="History" AND alma.subjects="Jazz")'
+def test_cql_query_needs_one_heading_from_every_phrase():
+    assert cql_query([part(["history", "jazz", "music"], [["History"], ["Jazz", "Jazz musicians"]])]) == (
+        'alma.all_for_ui all "history jazz music" OR '
+        'alma.subjects="History" AND alma.subjects="Jazz" OR '
+        'alma.subjects="History" AND alma.subjects="Jazz musicians"'
     )
+
+
+def test_cql_query_ands_parts_without_parentheses():
+    # Alma mishandles parentheses but binds AND tighter than OR, so the query is an OR of ANDs.
+    query = cql_query(
+        [part(["french", "revolution"], [["France--History--Revolution, 1789-1799"]]), part(["economy"], operator="AND")]
+    )
+    assert query == (
+        'alma.all_for_ui all "french revolution" AND alma.all_for_ui all "economy" OR '
+        'alma.subjects="France--History--Revolution, 1789-1799" AND alma.all_for_ui all "economy"'
+    )
+
+
+def test_cql_query_or_offers_either_part():
+    assert cql_query([part(["jazz"]), part(["oysters"], operator="OR")]) == (
+        'alma.all_for_ui all "jazz" OR alma.all_for_ui all "oysters"'
+    )
+
+
+def test_cql_query_not_excludes_by_keyword_from_every_alternative():
+    assert cql_query([part(["jazz"], [["Jazz"]]), part(["blues"], operator="NOT")]) == (
+        'alma.all_for_ui all "jazz" NOT alma.all_for_ui all "blues" OR alma.subjects="Jazz" NOT alma.all_for_ui all "blues"'
+    )
+
+
+def test_cql_query_and_and_not_bind_tighter_than_or():
+    parts = [part(["a"]), part(["b"], operator="AND"), part(["c"], operator="OR"), part(["d"], operator="NOT")]
+    assert cql_query(parts) == (
+        'alma.all_for_ui all "a" AND alma.all_for_ui all "b" OR alma.all_for_ui all "c" NOT alma.all_for_ui all "d"'
+    )
+
+
+def test_cql_query_rejects_a_group_with_only_exclusions():
+    with pytest.raises(ValueError):
+        cql_query([part(["rock"], operator="NOT")])
 
 
 def test_falls_back_to_corporate_author():

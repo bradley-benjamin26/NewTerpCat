@@ -18,3 +18,10 @@ test("shows an alert when the backend is unreachable", async () => {
   render(await SearchPage(props));
   expect(screen.getByRole("alert").textContent).toMatch(/not responding/);
 });
+
+test("shows the backend's hint when the query can't be searched", async () => {
+  const detail = "NOT needs something to search for first, for example: jazz NOT blues";
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ detail }), { status: 422 })));
+  render(await SearchPage(props));
+  expect(screen.getByRole("alert").textContent).toBe(detail);
+});

@@ -1,18 +1,30 @@
 import asyncio
+import re
 
 import httpx
+from spacy.lang.en.stop_words import STOP_WORDS
 
 SUGGEST = "https://id.loc.gov/authorities/subjects/suggest2"
 
 
-def match(phrase: str, hits: list[dict]) -> str | None:
-    """Authorized heading whose label or variant equals the phrase, so only verified terms are added."""
-    p = phrase.casefold()
+def _words(s: str) -> set[str]:
+    return set(re.findall(r"[^\W\d_]+", s.casefold())) - STOP_WORDS
+
+
+def match(phrase: str, hits: list[dict]) -> list[str]:
+    """Closest headings that contain every word of the phrase, with fewer extra words than the phrase has."""
+    want = _words(phrase)
+    scored = []
     for hit in hits:
-        labels = [hit["aLabel"], *hit.get("more", {}).get("variantLabels", [])]
-        if p in (label.casefold() for label in labels):
-            return hit["aLabel"]
-    return None
+        variants = map(_words, hit.get("more", {}).get("variantLabels", []))
+        # A variant must paraphrase the phrase, not share one stray word ("French-Algerian War").
+        labels = [_words(hit["aLabel"]), *(v for v in variants if len(v & want) >= min(2, len(want)))]
+        if want <= set().union(*labels):
+            extra = min(len(label - want) for label in labels)
+            if extra < len(want):
+                scored.append((extra, hit["aLabel"]))
+    best = min((extra for extra, _ in scored), default=None)
+    return list(dict.fromkeys(heading for extra, heading in scored if extra == best))
 
 
 async def _lookup(client: httpx.AsyncClient, phrase: str) -> list[dict]:
@@ -21,9 +33,19 @@ async def _lookup(client: httpx.AsyncClient, phrase: str) -> list[dict]:
     return res.json()["hits"]
 
 
-async def subjects(phrases: list[str]) -> list[str]:
+async def _first_match(client: httpx.AsyncClient, alternatives: list[str]) -> dict | None:
+    for phrase in alternatives:
+        try:
+            headings = match(phrase, await _lookup(client, phrase))
+        except (httpx.HTTPError, ValueError, KeyError):
+            continue  # a failed lookup only loses that subject; the search still runs
+        if headings:
+            return {"phrase": phrase, "headings": headings}
+    return None
+
+
+async def subjects(phrases: list[list[str]]) -> list[dict]:
+    """phrases holds alternatives per noun phrase, broadest first; the first one with a heading wins."""
     async with httpx.AsyncClient(timeout=3) as client:
-        results = await asyncio.gather(*(_lookup(client, p) for p in phrases), return_exceptions=True)
-    # A failed lookup only loses that subject; the search still runs.
-    found = [match(p, hits) for p, hits in zip(phrases, results) if isinstance(hits, list)]
-    return list(dict.fromkeys(s for s in found if s))
+        found = await asyncio.gather(*(_first_match(client, alternatives) for alternatives in phrases))
+    return [f for f in found if f]

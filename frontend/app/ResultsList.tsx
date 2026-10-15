@@ -10,8 +10,15 @@ type CatalogRecord = {
   online: boolean;
   holdings: Holding[];
 };
-type Searched = { keywords: string[]; subjects: string[]; people: string[] };
-export type SearchResult = { total: number; records: CatalogRecord[]; searched?: Searched };
+type Searched = {
+  operator: "AND" | "OR" | "NOT" | null;
+  keywords: string[];
+  subjects: { phrase: string; headings: string[] }[];
+  people: string[];
+};
+export type SearchResult = { total: number; records: CatalogRecord[]; searched?: Searched[] };
+
+const JOINS = { AND: "AND: must also match", OR: "OR: or match this instead", NOT: "NOT: leave out records with" };
 
 const STATUS: Record<string, string> = {
   available: "Available",
@@ -28,22 +35,54 @@ function availability(r: CatalogRecord): string[] {
   return lines.length ? lines : ["Availability unknown: see the full record"];
 }
 
-function SearchedFor({ searched }: { searched: Searched }) {
+function Part({ part }: { part: Searched }) {
+  return (
+    <dl>
+      <dt>Keywords</dt>
+      <dd>{part.keywords.join(" ")}</dd>
+      <dt>Subject headings (Library of Congress)</dt>
+      <dd>
+        {part.subjects.length ? (
+          <ul>
+            {part.subjects.map((s) => (
+              <li key={s.phrase}>
+                “{s.phrase}” matched {s.headings.join(" or ")}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          "No matching subject headings"
+        )}
+      </dd>
+      {part.people.length > 0 && (
+        <>
+          <dt>Possible authors</dt>
+          <dd>{part.people.join("; ")}</dd>
+        </>
+      )}
+    </dl>
+  );
+}
+
+function SearchedFor({ searched }: { searched: Searched[] }) {
   return (
     <section aria-labelledby="searched-heading" className={styles.searched}>
       <h2 id="searched-heading">What we searched</h2>
-      <dl>
-        <dt>Keywords</dt>
-        <dd>{searched.keywords.join(" ")}</dd>
-        <dt>Subject headings (Library of Congress)</dt>
-        <dd>{searched.subjects.join("; ") || "No matching subject headings"}</dd>
-        {searched.people.length > 0 && (
-          <>
-            <dt>Possible authors</dt>
-            <dd>{searched.people.join("; ")}</dd>
-          </>
-        )}
-      </dl>
+      {searched.length === 1 ? (
+        <Part part={searched[0]} />
+      ) : (
+        <>
+          <p>Your search has {searched.length} parts. AND and NOT apply before OR.</p>
+          <ol>
+            {searched.map((part, i) => (
+              <li key={i}>
+                {part.operator && <p className={styles.join}>{JOINS[part.operator]}</p>}
+                <Part part={part} />
+              </li>
+            ))}
+          </ol>
+        </>
+      )}
     </section>
   );
 }
