@@ -159,3 +159,27 @@ def test_leading_and_is_ignored(monkeypatch):
     monkeypatch.setattr(main, "fetch", fake_fetch)
     TestClient(main.app).get("/search", params={"q": "AND jazz"})
     assert seen["cql"] == 'alma.all_for_ui all "jazz"'
+
+
+def test_all_caps_query_has_no_operators(monkeypatch):
+    seen = {}
+
+    async def fake_fetch(cql):
+        seen["cql"] = cql
+        return FIXTURE
+
+    monkeypatch.setattr(main, "fetch", fake_fetch)
+    res = TestClient(main.app).get("/search", params={"q": "TO BE OR NOT TO BE"})
+    assert res.status_code == 200
+    assert seen["cql"] == 'alma.all_for_ui all "TO BE OR NOT TO BE"'
+
+
+def test_overlong_query_is_rejected_before_any_lookup(monkeypatch):
+    async def must_not_run(*args):
+        raise AssertionError("no lookups for a rejected query")
+
+    monkeypatch.setattr(main, "subjects", must_not_run)
+    monkeypatch.setattr(main, "fetch", must_not_run)
+    res = TestClient(main.app).get("/search", params={"q": " AND ".join(["jazz"] * 100)})
+    assert res.status_code == 422
+    assert "shorter" in res.json()["detail"]

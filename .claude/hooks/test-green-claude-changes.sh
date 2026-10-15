@@ -22,4 +22,6 @@ printf 'export const b = 2;\n' >> "$REPO/a.ts"
 check "a clean new line is silent" "$(run)" 0
 printf 'export const c = await fetch("/x");\n' > "$REPO/new.ts"
 check "an untracked new file is audited" "$(run)" 2
+printf 'export const d = await fetch("/y");\n' > "$REPO/café.ts"
+check "a file with a non-ASCII name is audited" "$(run)" 2
 exit $fail

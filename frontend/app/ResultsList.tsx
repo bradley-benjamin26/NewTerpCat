@@ -40,20 +40,24 @@ function Part({ part }: { part: Searched }) {
     <dl>
       <dt>Keywords</dt>
       <dd>{part.keywords.join(" ")}</dd>
-      <dt>Subject headings (Library of Congress)</dt>
-      <dd>
-        {part.subjects.length ? (
-          <ul>
-            {part.subjects.map((s) => (
-              <li key={s.phrase}>
-                “{s.phrase}” matched {s.headings.join(" or ")}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          "No matching subject headings"
-        )}
-      </dd>
+      {part.operator !== "NOT" && (
+        <>
+          <dt>Subject headings (Library of Congress)</dt>
+          <dd>
+            {part.subjects.length ? (
+              <ul>
+                {part.subjects.map((s) => (
+                  <li key={s.phrase}>
+                    “{s.phrase}” matched {s.headings.join(" or ")}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              "No matching subject headings"
+            )}
+          </dd>
+        </>
+      )}
       {part.people.length > 0 && (
         <>
           <dt>Possible authors</dt>

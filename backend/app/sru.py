@@ -1,5 +1,5 @@
 import re
-from itertools import product
+from itertools import islice, product
 import xml.etree.ElementTree as ET
 
 import httpx
@@ -13,6 +13,9 @@ UMD = {
 
 NS = {"srw": "http://www.loc.gov/zing/srw/", "marc": "http://www.loc.gov/MARC21/slim"}
 TRAILING = " /:;,."
+# Combinations multiply with each AND part and matched heading (2**20 for 20 parts); keep the first few,
+# which use the keywords and the best headings.
+MAX_COMBOS = 20
 
 
 def _quoted(s: str) -> str:
@@ -30,7 +33,7 @@ def _alternatives(part: dict) -> list[list[str]]:
     alternatives += [[f"alma.creator all {_quoted(p)}"] for p in part["people"]]
     if part["subjects"]:
         # One heading from every phrase, so a broad heading like "History" can't flood the results.
-        combos = product(*(s["headings"] for s in part["subjects"]))
+        combos = islice(product(*(s["headings"] for s in part["subjects"])), MAX_COMBOS)
         alternatives += [[f"alma.subjects={_quoted(h)}" for h in combo] for combo in combos]
     return alternatives
 
@@ -40,14 +43,13 @@ def _group(parts: list[dict]) -> str:
     if not include:
         raise ValueError("NOT needs something to search for first, for example: jazz NOT blues")
     exclude = "".join(f" NOT {_keywords(p['keywords'])}" for p in parts if p.get("operator") == "NOT")
-    combos = product(*map(_alternatives, include))
+    combos = islice(product(*map(_alternatives, include)), MAX_COMBOS)
     return " OR ".join(" AND ".join(c for alt in combo for c in alt) + exclude for combo in combos)
 
 
 def cql_query(parts: list[dict]) -> str:
     """Parts joined by the user's AND/OR/NOT, with AND and NOT binding tighter than OR. Alma mishandles
     parentheses but uses the same precedence, so the query is written out as an OR of ANDs."""
-    # shortcut: combinations multiply with each part and phrase; fine for typed queries, cap it if long queries appear.
     groups = [[]]
     for part in parts:
         if part.get("operator") == "OR":

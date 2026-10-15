@@ -10,6 +10,7 @@ from app.sru import cql_query, parse_response
 from app.sru import search as fetch
 
 app = FastAPI(title="NewTerpCat")
+MAX_QUERY = 300
 _nlp()  # load the spaCy model at startup, not on the first search
 
 
@@ -32,8 +33,12 @@ async def search(q: str):
     q = q.strip()
     if not q:
         raise HTTPException(422, "Query must not be blank")
+    if len(q) > MAX_QUERY:
+        # Bounds the subject lookups (one per phrase) and the parts multiplied into the catalog query.
+        raise HTTPException(422, f"Please use a shorter search (at most {MAX_QUERY} characters).")
     # Only uppercase AND/OR/NOT are Boolean; lowercase words are ordinary (stop) words.
-    tokens = re.split(r"(?<!\S)(AND|OR|NOT)\s+", q)
+    # An all-caps query (caps lock, "TO BE OR NOT TO BE") has no operators.
+    tokens = [q] if q.isupper() else re.split(r"(?<!\S)(AND|OR|NOT)\s+", q)
     parts = list(zip([None, *tokens[1::2]], [t.strip() for t in tokens[::2]]))
     if not parts[0][1]:
         parts.pop(0)  # the query starts with an operator

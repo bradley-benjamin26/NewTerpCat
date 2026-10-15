@@ -52,7 +52,7 @@ while IFS= read -r f; do
     # Relative paths in the content resolve from the real file's directory.
     report="$(GREEN_CLAUDE_BASE_DIR="$(dirname "$f")" GREEN_CLAUDE_SOURCE_FILE="$f" "$AUDIT" "$TMP/${f##*/}" 2>/dev/null)"
     grep -q '^\[' <<<"$report" && REPORTS+="── $f"$'\n'"$report"$'\n\n'
-done < <(git diff --name-only HEAD 2>/dev/null; git ls-files --others --exclude-standard)
+done < <(git -c core.quotepath=off diff --name-only HEAD 2>/dev/null; git -c core.quotepath=off ls-files --others --exclude-standard)
 
 [ -n "$REPORTS" ] || exit 0
 cat >&2 <<EOF

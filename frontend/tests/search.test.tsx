@@ -150,5 +150,7 @@ test("a Boolean query shows each part with the operator that joins it", async ()
   within(parts[2]).getByText(/^OR/);
   within(parts[3]).getByText(/^NOT/);
   within(parts[3]).getByText("blues");
+  // Excluded parts are matched by keyword only, so no subject row that reads like a failed lookup.
+  expect(within(parts[3]).queryByText(/subject headings/i)).toBeNull();
   await expectNoAxeViolations(container);
 });

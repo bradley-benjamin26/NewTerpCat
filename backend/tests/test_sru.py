@@ -101,6 +101,19 @@ def test_cql_query_rejects_a_group_with_only_exclusions():
         cql_query([part(["rock"], operator="NOT")])
 
 
+def test_cql_query_caps_combinations_so_long_queries_stay_small():
+    # 20 AND parts with 2 alternatives each would be 2**20 combinations uncapped.
+    parts = [part(["jazz"], [["Jazz"]], operator="AND") for _ in range(20)]
+    query = cql_query(parts)
+    assert query.count(" OR ") < 20
+    assert query.startswith('alma.all_for_ui all "jazz" AND')
+
+
+def test_cql_query_caps_heading_combinations_within_a_part():
+    many = part(["x"], [["A", "B", "C"]] * 12)  # 3**12 heading combinations uncapped
+    assert cql_query([many]).count(" OR ") < 25
+
+
 def test_falls_back_to_corporate_author():
     xml = b"""<searchRetrieveResponse xmlns="http://www.loc.gov/zing/srw/"><numberOfRecords>1</numberOfRecords>
     <records><record><recordData><record xmlns="http://www.loc.gov/MARC21/slim">
