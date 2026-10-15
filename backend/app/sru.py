@@ -193,7 +193,10 @@ def _details(rec) -> dict:
 
 def record(xml: bytes, library: dict | None = None) -> dict | None:
     """The first record in an SRU response with its full details, or None when there is none."""
-    rec = ET.fromstring(xml).find(".//marc:record", NS)
+    root = ET.fromstring(xml)
+    if root.tag != f"{{{NS['srw']}}}searchRetrieveResponse":
+        raise ET.ParseError("not an SRU response")  # a well-formed maintenance page isn't "no record"
+    rec = root.find(".//marc:record", NS)
     return None if rec is None else _record(rec, library) | _details(rec)
 
 
