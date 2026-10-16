@@ -8,7 +8,11 @@ export type CatalogRecord = {
   id: string;
   title: string;
   author: string | null;
+  authors: string[];
   date: string | null;
+  edition: string | null;
+  publisher: string | null;
+  place: string | null;
   url: string | null;
   online: boolean;
   holdings: Holding[];

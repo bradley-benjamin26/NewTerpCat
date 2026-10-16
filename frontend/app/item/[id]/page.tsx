@@ -13,7 +13,6 @@ const CATALOG_DOWN = "The library catalog is not responding. Try again shortly."
 type Item = Omit<CatalogRecord, "score" | "breakdown"> & {
   subjects: string[];
   publication: string | null;
-  edition: string | null;
   description: string | null;
   series: string | null;
   summary: string | null;
