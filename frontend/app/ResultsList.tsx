@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Citation from "./Citation";
 import Cover from "./Cover";
+import ExportBar from "./ExportBar";
 import { requestLinks } from "./requests";
 import styles from "./search.module.css";
 
@@ -176,10 +177,15 @@ export default function ResultsList({ query, result }: { query: string; result: 
         Sorted by relevance score, best first, showing {result.records.length}. Open “Relevance” under a result
         to see how its points add up, or change the points in <a href="/relevance">relevance settings</a>.
       </p>
+      <ExportBar records={result.records} />
       <ol className={styles.results}>
         {result.records.map((r) => (
           <li key={r.id}>
             <Cover isbns={r.isbns} className={styles.cover} />
+            {/* The name keeps the visible "Select" and adds the title, so each box says which result it is. */}
+            <label className={styles.select}>
+              <input type="checkbox" form="export" name="id" value={r.id} aria-label={`Select ${r.title}`} /> Select
+            </label>
             <h2>
               <Link href={`/item/${encodeURIComponent(r.id)}`}>{r.title}</Link>
             </h2>

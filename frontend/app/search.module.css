@@ -187,3 +187,22 @@
 .cite[open] {
   margin-bottom: 0.5rem;
 }
+
+.select {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.select input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+}
+
+.select input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
