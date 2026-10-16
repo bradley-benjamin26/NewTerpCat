@@ -51,8 +51,6 @@ a:focus-visible {
   flex-wrap: wrap;
   gap: 0.5rem;
   margin: 0.5rem 0;
-  padding: 0;
-  list-style: none;
 }
 
 .requests a {
@@ -64,7 +62,7 @@ a:focus-visible {
   border-radius: 6px;
 }
 
-.requests li:first-child a {
+.requests a:first-child {
   color: #fff;
   background: var(--accent);
   border-color: var(--accent);

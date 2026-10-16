@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requestLinks } from "./requests";
 import styles from "./search.module.css";
 
 export type Holding = { location: string | null; call_number: string | null; status: string | null };
@@ -180,6 +181,14 @@ export default function ResultsList({ query, result }: { query: string; result: 
                 {line}
               </p>
             ))}
+            <div className="requests">
+              {requestLinks(r).map((l) => (
+                // The title tells screen reader users which result each link belongs to.
+                <a key={l.label} href={l.href} aria-label={`${l.label}: ${r.title}`}>
+                  {l.label}
+                </a>
+              ))}
+            </div>
             <Relevance r={r} />
           </li>
         ))}

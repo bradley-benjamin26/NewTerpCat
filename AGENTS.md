@@ -34,9 +34,10 @@
     * app/search/page.tsx -- results page; calls the backend
     * app/search/loading.tsx -- search box and "Searching the catalog…" while results load (the Suspense boundary cacheComponents needs)
     * app/SearchForm.tsx -- search box and "Include Big Ten libraries" checkbox
-    * app/ResultsList.tsx -- results list with UMD and interlibrary loan availability, relevance breakdown per result, and "What we searched" panel; titles open the item page
+    * app/ResultsList.tsx -- results list with UMD and interlibrary loan availability, request links, relevance breakdown per result, and "What we searched" panel; titles open the item page
+    * app/requests.ts -- request links: Primo hold, ILLiad loan and chapter scan
     * app/item/ -- item page for one record
-        * [id]/page.tsx -- the page: where to find it, call number, details, subjects, contents, notes
+        * [id]/page.tsx -- the page: where to find it, request links, call number, details, subjects, contents, notes
         * [id]/not-found.tsx -- shown when the record doesn't exist
         * [id]/loading.tsx -- search box and "Loading the record…" while the record loads
         * item.module.css -- item page styles

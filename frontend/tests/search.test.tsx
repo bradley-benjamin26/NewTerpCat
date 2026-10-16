@@ -277,3 +277,21 @@ test("result titles open the item page", () => {
   render(<ResultsList query="climate change" result={{ ...results, records: [record] }} />);
   expect(screen.getByRole("link", { name: record.title }).getAttribute("href")).toBe("/item/rutgers%3A991");
 });
+
+test("each result has request links named with its title", async () => {
+  const [first] = results.records;
+  const second = { ...first, id: "9", title: "Oysters and the bay" };
+  const { container } = render(<ResultsList query="q" result={{ total: 2, records: [first, second] }} />);
+  const pickups = screen.getAllByRole("link", { name: /^Request for pickup: / });
+  expect(pickups.map((a) => a.getAttribute("aria-label"))).toEqual([
+    `Request for pickup: ${first.title}`,
+    `Request for pickup: ${second.title}`,
+  ]);
+  expect(pickups[0].textContent).toBe("Request for pickup");
+  await expectNoAxeViolations(container);
+});
+
+test("online-only result has no request links", () => {
+  render(<ResultsList query="q" result={{ total: 1, records: [results.records[1]] }} />);
+  expect(screen.queryByRole("link", { name: /^Request/ })).toBeNull();
+});

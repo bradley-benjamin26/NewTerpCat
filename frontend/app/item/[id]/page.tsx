@@ -67,13 +67,13 @@ function WhereToFind({ item }: { item: Item }) {
       <h2 id="where-heading">Where to find it</h2>
       {lines.length ? <ul>{lines}</ul> : <p>Availability unknown.</p>}
       {requests.length > 0 && (
-        <ul className="requests">
+        <div className="requests">
           {requests.map((l) => (
-            <li key={l.label}>
-              <a href={l.href}>{l.label}</a>
-            </li>
+            <a key={l.label} href={l.href}>
+              {l.label}
+            </a>
           ))}
-        </ul>
+        </div>
       )}
       {item.url && <a href={item.url}>Open in the UMD catalog</a>}
     </section>

@@ -46,7 +46,7 @@ Empty values are left out. ILLiad's form asks the patron for the chapter details
 ## Frontend
 
 - `app/requests.ts`: `requestLinks(record)` returns `{ label, href }[]` following the rules above.
-- Item page: the links appear at the end of "Where to find it" as a list.
+- Item page: the links appear at the end of "Where to find it" as a group of links (a `div`, not a list, so they don't add list items inside the results list).
 - Search results: the same links under each result's availability. Each link's accessible name includes the
   title ("Request for pickup: *title*") so a screen reader's links list tells results apart (WCAG 2.4.4). The
   visible text stays short.
