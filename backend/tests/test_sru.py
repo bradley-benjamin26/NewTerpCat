@@ -41,6 +41,11 @@ def test_details_are_empty_when_the_record_has_none():
     }
 
 
+def test_search_records_carry_isbns():
+    rec = parse_response(FULL)["records"][0]
+    assert rec["isbns"] == ["9781421437576", "1421437570"]
+
+
 def test_record_from_a_big_ten_library_keeps_its_id():
     r = record(FULL, BTAA[0])
     assert r["id"] == "rutgers:990036740560108238"
