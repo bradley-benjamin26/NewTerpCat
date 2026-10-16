@@ -68,3 +68,7 @@ test("OpenURL drops empty fields", () => {
   const href = requestLinks({ ...bigTen, author: null, date: null, oclc: null })[0].href;
   expect([...params(href).keys()]).toEqual(["sid", "genre", "title"]);
 });
+
+test("OpenURL drops the ISBN's qualifier", () => {
+  expect(params(requestLinks({ ...bigTen, isbns: ["0801812345 (alk. paper)"] })[0].href).get("isbn")).toBe("0801812345");
+});
