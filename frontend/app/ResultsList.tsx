@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Citation from "./Citation";
 import Cover from "./Cover";
 import { requestLinks } from "./requests";
 import styles from "./search.module.css";
@@ -196,6 +197,10 @@ export default function ResultsList({ query, result }: { query: string; result: 
                 </a>
               ))}
             </div>
+            <details className={styles.cite}>
+              <summary aria-label={`Cite: ${r.title}`}>Cite</summary>
+              <Citation record={r} />
+            </details>
             <Relevance r={r} />
           </li>
         ))}

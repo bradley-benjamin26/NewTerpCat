@@ -173,3 +173,17 @@
     display: block;
   }
 }
+
+.cite summary {
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.cite summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.cite[open] {
+  margin-bottom: 0.5rem;
+}

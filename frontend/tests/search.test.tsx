@@ -319,3 +319,11 @@ test("online-only result has no request links", () => {
   render(<ResultsList query="q" result={{ total: 1, records: [results.records[1]] }} />);
   expect(screen.queryByRole("link", { name: /^Request/ })).toBeNull();
 });
+
+test("each result has a Cite toggle named with its title", async () => {
+  const { container } = render(<ResultsList query="climate" result={results} />);
+  const toggles = screen.getAllByText("Cite", { selector: "summary" });
+  expect(toggles).toHaveLength(3);
+  expect(toggles[0].getAttribute("aria-label")).toBe("Cite: The adaptive challenge of climate change");
+  await expectNoAxeViolations(container);
+});

@@ -1,0 +1,58 @@
+/* Citation picker, text and buttons: on results, the item page and the export bar. */
+.citation {
+  max-width: 42rem;
+}
+
+.picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.picker select,
+.actions button {
+  min-height: 2rem;
+  font: inherit;
+  color: inherit;
+  background: var(--background);
+  border: 2px solid var(--border);
+  border-radius: 6px;
+}
+
+.picker select {
+  padding: 0.2rem 0.5rem;
+}
+
+/* Set like a bibliography entry, hanging indent and all, so it looks as it will in the paper. */
+.text {
+  margin: 0.75rem 0;
+  padding-left: 2rem;
+  text-indent: -2rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.actions button {
+  padding: 0.3rem 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.actions button:hover {
+  text-decoration: underline;
+}
+
+.picker select:focus-visible,
+.actions button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}

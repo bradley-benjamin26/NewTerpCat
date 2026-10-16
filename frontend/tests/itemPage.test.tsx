@@ -79,6 +79,7 @@ test("renders where to find it first, then the details", async () => {
   expect(screen.getAllByRole("heading").map((h) => [h.tagName, h.textContent])).toEqual([
     ["H1", full.title],
     ["H2", "Where to find it"],
+    ["H2", "Cite this"],
     ["H2", "Summary"],
     ["H2", "Details"],
     ["H2", "Subjects"],
@@ -201,4 +202,12 @@ test("Big Ten item links to interlibrary loan", async () => {
   render(await ItemPage(props("rutgers:991")));
   const where = within(screen.getByRole("region", { name: "Where to find it" }));
   where.getByRole("link", { name: "Request through interlibrary loan" });
+});
+
+test("item page has a Cite this section", async () => {
+  api(full);
+  const { container } = render(await ItemPage(props()));
+  screen.getByRole("heading", { name: "Cite this" });
+  screen.getByRole("combobox", { name: "Citation style" });
+  expect(container.textContent).toContain("Kennedy, V. S., & Breitburg, D. (2020).");
 });
