@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { cite, plain, type Citable, type Style } from "../app/citations";
+import { cite, plain, ris, type Citable, type Style } from "../app/citations";
 
 const book: Citable = {
   title: "The Chesapeake oyster : a history",
@@ -99,4 +99,46 @@ test.each([
 ] as [number, Style, string][])("%i authors in %s", (n, style, start) => {
   const t = text({ authors: people(n) }, style);
   expect(t.slice(0, start.length)).toBe(start);
+});
+
+test("ris maps every field", () =>
+  expect(
+    ris([
+      {
+        ...book,
+        authors: ["Kennedy, Victor S.", "Breitburg, Denise"],
+        isbns: ["9781421437576", "1421437570"],
+        url: "https://example.org/1",
+      },
+    ]),
+  ).toBe(
+    [
+      "TY  - BOOK",
+      "AU  - Kennedy, Victor S.",
+      "AU  - Breitburg, Denise",
+      "TI  - The Chesapeake oyster: a history",
+      "ET  - Second edition",
+      "PB  - Johns Hopkins University Press",
+      "CY  - Baltimore",
+      "PY  - 2020",
+      "SN  - 9781421437576",
+      "SN  - 1421437570",
+      "UR  - https://example.org/1",
+      "ER  - ",
+      "",
+    ].join("\r\n"),
+  ));
+
+test("ris leaves out empty fields and url null", () =>
+  expect(ris([{ ...book, authors: [], edition: null, publisher: null, place: null, date: null }])).toBe(
+    "TY  - BOOK\r\nTI  - The Chesapeake oyster: a history\r\nER  - \r\n",
+  ));
+
+test("ris never shortens authors", () =>
+  expect(ris([{ ...book, authors: people(21) }]).match(/^AU {2}- /gm)).toHaveLength(21));
+
+test("ris joins several records", () => {
+  const two = ris([book, { ...book, title: "Second" }]);
+  expect(two.match(/^TY {2}- BOOK\r$/gm)).toHaveLength(2);
+  expect(two).toContain("ER  - \r\nTY  - BOOK\r\n");
 });

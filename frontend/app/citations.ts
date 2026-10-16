@@ -77,3 +77,26 @@ export function cite(r: Citable, style: Style): Cited {
   const tail = rest.filter(Boolean).map((s) => ` ${end(s!)}`).join("");
   return { before, title: titleCase(r.title), after: `.${tail}` };
 }
+
+// RIS, the import format of Zotero, EndNote and Mendeley: "TAG  - value" lines, CRLF, one block per record.
+export function ris(records: Citable[]): string {
+  return records
+    .map((r) =>
+      [
+        ["TY", "BOOK"],
+        ...r.authors.map((a) => ["AU", a]),
+        ["TI", tidy(r.title)],
+        ["ET", r.edition],
+        ["PB", r.publisher],
+        ["CY", r.place],
+        ["PY", r.date],
+        ...r.isbns.map((i) => ["SN", i]),
+        ["UR", r.url],
+        ["ER", ""],
+      ]
+        .filter(([tag, value]) => value || tag === "ER")
+        .map(([tag, value]) => `${tag}  - ${value}\r\n`)
+        .join(""),
+    )
+    .join("");
+}
