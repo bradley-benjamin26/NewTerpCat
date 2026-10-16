@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { type CatalogRecord, STATUS } from "../../ResultsList";
+import { requestLinks } from "../../requests";
 import SearchForm from "../../SearchForm";
 import styles from "../item.module.css";
 
@@ -60,10 +61,20 @@ function WhereToFind({ item }: { item: Item }) {
         </li>
       ));
   if (item.online) lines.push(<li key="online">Available online</li>);
+  const requests = requestLinks(item);
   return (
     <section aria-labelledby="where-heading" className={styles.where}>
       <h2 id="where-heading">Where to find it</h2>
       {lines.length ? <ul>{lines}</ul> : <p>Availability unknown.</p>}
+      {requests.length > 0 && (
+        <div className="requests">
+          {requests.map((l) => (
+            <a key={l.label} href={l.href}>
+              {l.label}
+            </a>
+          ))}
+        </div>
+      )}
       {item.url && <a href={item.url}>Open in the UMD catalog</a>}
     </section>
   );
