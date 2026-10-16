@@ -36,7 +36,7 @@ def test_details_are_empty_when_the_record_has_none():
         '<datafield tag="245"><subfield code="a">Untitled</subfield></datafield></record>'
     )
     assert _details(rec) == {
-        "publication": None, "edition": None, "description": None, "series": None, "summary": None,
+        "publication": None, "description": None, "series": None, "summary": None,
         "isbns": [], "contributors": [], "contents": [], "notes": [],
     }
 
@@ -54,6 +54,42 @@ def test_record_from_a_big_ten_library_keeps_its_id():
 
 def test_record_is_none_when_nothing_matches():
     assert record(EMPTY) is None
+
+
+def test_record_has_citation_fields():
+    r = record(FULL)
+    assert (r["publisher"], r["place"], r["edition"]) == ("Johns Hopkins University Press", "Baltimore", "Second edition")
+    assert r["authors"] == ["Kennedy, Victor S.", "Breitburg, Denise"]  # 710 Maryland Sea Grant is not an author
+
+
+def test_search_records_carry_citation_fields():
+    first = parse_response(FULL)["records"][0]
+    assert first["publisher"] == "Johns Hopkins University Press" and first["authors"][0] == "Kennedy, Victor S."
+
+
+def test_placeholder_publisher_and_place_are_null():
+    records = parse_response((FIXTURES / "sru_umd.xml").read_bytes())["records"]
+    senate = next(r for r in records if r["title"].startswith('"Removal of Oysters'))  # 264 $b "[publisher not identified],"
+    assert senate["publisher"] is None and senate["place"] == "Washington, DC"
+    livingston = next(r for r in records if r["title"].startswith("Account of Robert Livingston"))
+    assert livingston["place"] is None  # "[Place of production not identified :"
+
+
+def test_authors_skip_editors_and_translators():
+    more = (
+        '<datafield tag="700"><subfield code="a">Editor, Ed,</subfield><subfield code="e">editor.</subfield></datafield>'
+        '<datafield tag="700"><subfield code="a">Translator, Tom,</subfield><subfield code="4">trl</subfield></datafield>'
+        '<datafield tag="700"><subfield code="a">Writer, Wanda,</subfield><subfield code="e">author.</subfield></datafield>'
+        '<datafield ind1="2" ind2=" " tag="710">'
+    )
+    xml = FULL.replace(b'<datafield ind1="2" ind2=" " tag="710">', more.encode())
+    assert record(xml)["authors"] == ["Kennedy, Victor S.", "Breitburg, Denise", "Writer, Wanda"]
+
+
+def test_falls_back_to_260_and_has_no_authors_without_names():
+    xml = FULL.replace(b'tag="264"', b'tag="260"').replace(b'tag="100"', b'tag="900"').replace(b'tag="700"', b'tag="900"')
+    r = record(xml)
+    assert (r["publisher"], r["place"], r["authors"]) == ("Johns Hopkins University Press", "Baltimore", [])
 
 
 def test_parses_print_record_with_holdings():
