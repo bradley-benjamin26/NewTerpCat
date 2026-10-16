@@ -11,7 +11,9 @@ result. On the results page, a patron can select several results and export thei
   fields. No citation library (citation-js/CSL is ~1 MB for three book styles) and no external service (Primo's
   cite doesn't cover Big Ten records).
 - **Books only.** The catalog returns books; no article or chapter types.
-- **First author only.** `author` is MARC 100/110/111. Added authors (700) are not cited and there is no "et al."
+- **Authors are the main entry plus added personal authors.** A 700 counts as an author when it has no relator
+  ($e, $4) or its relator is "author" / `aut`; editors, translators and illustrators are not cited. Each style
+  then lists or shortens the authors by its own rule (see Citation rules).
 - **Edition as cataloged.** MARC 250 $a ("2nd ed.", "Second edition") is used as written, not normalized.
 - **No title case conversion for APA.** Cataloged titles are already in sentence case, which APA wants; only the
   first letter after a colon is capitalized.
@@ -27,8 +29,10 @@ result. On the results page, a patron can select several results and export thei
 | `publisher` | 264 $b, else 260 $b      |
 | `place`     | 264 $a, else 260 $a      |
 | `edition`   | 250 $a (moved from `_details`) |
+| `authors`   | `author` (100/110/111 $a $b), then each author 700 $a $b, in record order |
 
-Missing values are `null`. The frontend `CatalogRecord` type gains the same three fields.
+Missing values are `null`; `authors` is `[]` when there is none. The frontend `CatalogRecord` type gains the same
+four fields.
 
 ## Citation rules
 
@@ -39,7 +43,20 @@ The title's `" : "` (from 245 $a $b) becomes `": "`. MLA and Chicago put the tit
 word except a, an, the, and, but, or, for, nor, on, at, to, by, of, in, as, unless first, last or after a colon.
 Existing capitals are never lowered.
 
-Author "Smith, John Q." (personal names have a comma); a corporate name has no comma and is used as is.
+Names come from `authors`. A personal name is "Smith, John Q." (it has a comma); a corporate name has no comma and
+is used as is in every position. "Not inverted" means "John Q. Smith" (split at the first comma).
+
+| Authors | APA                                   | MLA                              | Chicago                                     |
+|---------|---------------------------------------|----------------------------------|---------------------------------------------|
+| 1       | Smith, J. Q.                          | Smith, John Q.                   | Smith, John Q.                              |
+| 2       | Smith, J. Q., & Jones, A.             | Smith, John Q., and Anna Jones   | Smith, John Q., and Anna Jones              |
+| 3       | Smith, J. Q., Jones, A., & Lee, K.    | Smith, John Q., et al.           | Smith, John Q., Anna Jones, and Kim Lee     |
+| 3–10    | all, last after "&"                   | first, et al.                    | all, last after "and"                       |
+| 11–20   | all, last after "&"                   | first, et al.                    | first seven, then "et al."                  |
+| 21+     | first 19, "…", last author            | first, et al.                    | first seven, then "et al."                  |
+
+APA never uses "et al." in a reference list (APA 7 §9.8); MLA 9 shortens at three; Chicago 17 (§14.76) at eleven.
+Only the first author is inverted in MLA and Chicago; every APA author is "Last, I."
 
 | Style   | Pattern                                                               |
 |---------|-----------------------------------------------------------------------|
@@ -54,7 +71,7 @@ Author "Smith, John Q." (personal names have a comma); a corporate name has no c
 
 `ris(records)` returns one block per record, lines `TAG  - value` ending in CRLF:
 
-`TY  - BOOK`, `AU` (author), `TI` (title), `ET` (edition), `PB` (publisher), `CY` (place), `PY` (year),
+`TY  - BOOK`, `AU` (one line per author, never shortened), `TI` (title), `ET` (edition), `PB` (publisher), `CY` (place), `PY` (year),
 `SN` (one line per ISBN), `UR` (the record's `url`, UMD only), `ER  - `.
 
 Empty fields are left out.
@@ -79,8 +96,10 @@ Empty fields are left out.
 
 ## Testing (written first, seen failing)
 
-- pytest: `publisher`, `place`, `edition` from 264 and from 260, and `null` when absent, in search and record results.
-- `cite`: each style; no author; corporate author; no year; no edition; no publisher or place; title case rules.
+- pytest: `publisher`, `place`, `edition` from 264 and from 260, and `null` when absent, in search and record results;
+  `authors` keeps 700s with no relator or "author"/`aut`, drops editors and translators, `[]` with no author.
+- `cite`: each style; no author; corporate author; no year; no edition; no publisher or place; title case rules;
+  author lists at 1, 2, 3, 11 and 21 authors in each style.
 - `ris`: field mapping, CRLF, several ISBNs, empty fields dropped, no `UR` for Big Ten records, several records.
 - `Citation`: style change updates the live region; Copy calls the clipboard and announces "Copied"; axe passes.
 - `ExportBar`: exports only the checked records; Select all; count announced; empty-selection message; copied text
