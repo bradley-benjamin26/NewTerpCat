@@ -176,3 +176,20 @@ test("page title names the book", async () => {
   api(full);
   expect((await generateMetadata(props())).title).toBe("The Chesapeake oyster : a history – NewTerpCat");
 });
+
+test("UMD item links to pickup and a chapter scan", async () => {
+  api(full);
+  render(await ItemPage(props()));
+  const where = within(screen.getByRole("region", { name: "Where to find it" }));
+  expect(where.getByRole("link", { name: "Request for pickup" }).getAttribute("href")).toBe(full.url);
+  expect(where.getByRole("link", { name: "Request a chapter scan" }).getAttribute("href")).toContain(
+    "isbn=9781421437576",
+  );
+});
+
+test("Big Ten item links to interlibrary loan", async () => {
+  api(bigTenOnly(true));
+  render(await ItemPage(props("rutgers:991")));
+  const where = within(screen.getByRole("region", { name: "Where to find it" }));
+  where.getByRole("link", { name: "Request through interlibrary loan" });
+});

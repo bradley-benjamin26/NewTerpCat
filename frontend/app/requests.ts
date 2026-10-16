@@ -1,7 +1,7 @@
 import type { CatalogRecord } from "./ResultsList";
 
 export type RequestLink = { label: string; href: string };
-type Requestable = CatalogRecord & { isbns?: string[] };
+type Requestable = Omit<CatalogRecord, "score" | "breakdown"> & { isbns?: string[] };
 
 function illiad(r: Requestable, genre: "book" | "bookitem"): string {
   const fields = { sid: "NewTerpCat", genre, title: r.title, au: r.author, date: r.date, isbn: r.isbns?.[0], rfe_dat: r.oclc };
