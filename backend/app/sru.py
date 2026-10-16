@@ -41,6 +41,12 @@ MAX_COMBOS = 20
 # Narrower queries surface matches that SRU's alphabetical order pushes past the first page.
 MAX_NARROW = 4
 SUBJECT_TAGS = ("600", "610", "611", "630", "650", "651")
+# Note types a patron can use; others (588 source of description, 583 actions...) are for catalogers.
+NOTE_LABELS = {
+    "500": "Note", "501": "With", "502": "Dissertation", "504": "Bibliography", "506": "Access",
+    "508": "Credits", "511": "Performers", "518": "Date and place", "521": "Audience",
+    "530": "Other formats", "538": "System requirements", "546": "Language", "586": "Awards",
+}
 
 
 def _quoted(s: str) -> str:
@@ -151,7 +157,7 @@ def _record(rec, library: dict | None) -> dict:
         "author": author,
         "date": year.group() if year else None,
         "url": UMD["record_url_template"].format(mms_id=mms_id),
-        "online": rec.find("marc:datafield[@tag='AVE']", NS) is not None,
+        "online": any(e.text == "Available" for e in rec.iterfind("marc:datafield[@tag='AVE']/marc:subfield[@code='e']", NS)),
         "holdings": holdings,
         "subjects": subjects,
         "oclc": oclc,
@@ -165,6 +171,46 @@ def _record(rec, library: dict | None) -> dict:
         record |= {"id": f"{library['key']}:{mms_id}", "url": None, "online": False, "holdings": [],
                    "umd": False, "btaa": [place]}
     return record
+
+
+def _details(rec) -> dict:
+    """The fields only the item page shows."""
+    def one(tag, codes):
+        return " ".join(_subfields(rec, tag, codes)).rstrip(TRAILING) or None
+
+    def every(tags, codes="a"):
+        fields = (f for f in rec.findall("marc:datafield", NS) if f.get("tag") in tags)
+        texts = (" ".join(sf.text or "" for sf in f.findall("marc:subfield", NS) if sf.get("code") in codes) for f in fields)
+        return [t.rstrip(TRAILING) for t in texts if t]
+
+    notes = {}  # label -> texts, in the order the record first uses each label
+    for f in rec.findall("marc:datafield", NS):
+        if label := NOTE_LABELS.get(f.get("tag")):
+            # Every lettered subfield but $u, a link that would show as bare text.
+            text = " ".join(sf.text or "" for sf in f.findall("marc:subfield", NS) if sf.get("code").isalpha() and sf.get("code") != "u")
+            if text := text.rstrip(TRAILING):
+                notes.setdefault(label, []).append(text)
+    contents = one("505", "agrt")  # enhanced notes put chapters in $t and $r, with no $a
+    return {
+        "publication": one("264", "abc") or one("260", "abc"),
+        "edition": one("250", "a"),
+        "description": one("300", "abc"),
+        "series": one("490", "av"),
+        "summary": one("520", "a"),
+        "isbns": every({"020"}),
+        "contributors": every({"700", "710"}, "ab"),
+        "contents": [c.strip(TRAILING) for c in contents.split(" -- ")] if contents else [],
+        "notes": [{"label": label, "texts": texts} for label, texts in notes.items()],
+    }
+
+
+def record(xml: bytes, library: dict | None = None) -> dict | None:
+    """The first record in an SRU response with its full details, or None when there is none."""
+    root = ET.fromstring(xml)
+    if root.tag != f"{{{NS['srw']}}}searchRetrieveResponse":
+        raise ET.ParseError("not an SRU response")  # a well-formed maintenance page isn't "no record"
+    rec = root.find(".//marc:record", NS)
+    return None if rec is None else _record(rec, library) | _details(rec)
 
 
 def parse_response(xml: bytes, library: dict | None = None) -> dict:

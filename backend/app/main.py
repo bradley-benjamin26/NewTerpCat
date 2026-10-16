@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException
 from app.analyze import _nlp, analyze
 from app.lcsh import subjects
 from app.rank import WEIGHTS, score
-from app.sru import BTAA, parse_response, pool_queries
+from app.sru import BTAA, parse_response, pool_queries, record
 from app.sru import search as fetch
 from app.worldcat import holding_counts
 
@@ -17,6 +17,8 @@ app = FastAPI(title="NewTerpCat")
 MAX_QUERY = 300
 MAX_POINTS = 200
 SHOWN = 25
+CATALOG_DOWN = "The library catalog is not responding. Try again shortly."
+LIBRARIES = {lib["key"]: lib for lib in BTAA}
 _nlp()  # load the spaCy model at startup, not on the first search
 
 
@@ -115,7 +117,7 @@ async def search(q: str, weights: str = "{}", btaa: bool = False):
             fetch(full),
         )
     except httpx.HTTPError:
-        raise HTTPException(502, "The library catalog is not responding. Try again shortly.")
+        raise HTTPException(502, CATALOG_DOWN)
     result = parse_response(xml)
     books, index = [], {}
     for page in [result, *filter(None, extra)]:
@@ -133,3 +135,21 @@ async def search(q: str, weights: str = "{}", btaa: bool = False):
     ranked.sort(key=lambda r: r["score"], reverse=True)
     body = {"total": result["total"], "records": ranked, "searched": searched}
     return body | {"libraries": found} if btaa else body
+
+
+@app.get("/record/{id}")
+async def record_by_id(id: str):
+    """One record by the ID /search returns: <mms id> at UMD, or <library key>:<mms id> at a Big Ten library."""
+    # Only digits reach the CQL query, so the ID can't change what is searched.
+    m = re.fullmatch(r"(?:([a-z]+):)?(\d+)", id)
+    if not m or (m[1] and m[1] not in LIBRARIES):
+        raise HTTPException(404, "We couldn't find that record.")
+    library = LIBRARIES.get(m[1])
+    cql = f"alma.mms_id={m[2]}"
+    try:
+        found = record(await (fetch(cql, library["base_url"]) if library else fetch(cql)), library)
+    except (httpx.HTTPError, ET.ParseError):
+        raise HTTPException(502, CATALOG_DOWN)
+    if not found:
+        raise HTTPException(404, "We couldn't find that record.")
+    return found

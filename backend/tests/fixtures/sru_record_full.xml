@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><searchRetrieveResponse xmlns="http://www.loc.gov/zing/srw/">
+  <version>1.2</version>
+  <numberOfRecords>1</numberOfRecords>
+  <records>
+    <record>
+      <recordSchema>marcxml</recordSchema>
+      <recordPacking>xml</recordPacking>
+      <recordData>
+        <record xmlns="http://www.loc.gov/MARC21/slim">
+          <leader>     nam a2200373Ia 45 0</leader>
+          <controlfield tag="001">990036740560108238</controlfield>
+          <datafield ind1=" " ind2=" " tag="020">
+            <subfield code="a">9781421437576</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="020">
+            <subfield code="a">1421437570</subfield>
+          </datafield>
+          <datafield ind1="1" ind2=" " tag="100">
+            <subfield code="a">Kennedy, Victor S.,</subfield>
+          </datafield>
+          <datafield ind1="1" ind2="4" tag="245">
+            <subfield code="a">The Chesapeake oyster :</subfield>
+            <subfield code="b">a history /</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="250">
+            <subfield code="a">Second edition.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="1" tag="264">
+            <subfield code="a">Baltimore :</subfield>
+            <subfield code="b">Johns Hopkins University Press,</subfield>
+            <subfield code="c">2020.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="300">
+            <subfield code="a">xii, 320 pages :</subfield>
+            <subfield code="b">illustrations ;</subfield>
+            <subfield code="c">24 cm</subfield>
+          </datafield>
+          <datafield ind1="1" ind2=" " tag="490">
+            <subfield code="a">Chesapeake books ;</subfield>
+            <subfield code="v">12</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="500">
+            <subfield code="a">Includes index.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="504">
+            <subfield code="a">Includes bibliographical references.</subfield>
+          </datafield>
+          <datafield ind1="0" ind2=" " tag="505">
+            <subfield code="a">Origins -- The fishery -- Restoration.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="520">
+            <subfield code="a">A history of the oyster in the bay.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2="0" tag="650">
+            <subfield code="a">Oyster culture</subfield>
+            <subfield code="z">Chesapeake Bay (Md. and Va.)</subfield>
+          </datafield>
+          <datafield ind1="1" ind2=" " tag="700">
+            <subfield code="a">Breitburg, Denise,</subfield>
+          </datafield>
+          <datafield ind1="2" ind2=" " tag="710">
+            <subfield code="a">Maryland Sea Grant.</subfield>
+          </datafield>
+          <datafield ind1="0" ind2="8" tag="AVA">
+            <subfield code="c">McKeldin Library</subfield>
+            <subfield code="d">SH371 .K44 2020</subfield>
+            <subfield code="e">available</subfield>
+          </datafield>
+        </record>
+      </recordData>
+      <recordPosition>1</recordPosition>
+    </record>
+  </records>
+</searchRetrieveResponse>

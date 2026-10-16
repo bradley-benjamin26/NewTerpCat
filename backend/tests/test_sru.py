@@ -1,12 +1,54 @@
 import asyncio
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import httpx
 import pytest
 
-from app.sru import BTAA, cql_query, parse_response, pool_queries, search
+from app.sru import BTAA, _details, cql_query, parse_response, pool_queries, record, search
 
 FIXTURES = Path(__file__).parent / "fixtures"
+FULL = (FIXTURES / "sru_record_full.xml").read_bytes()
+EMPTY = b'<searchRetrieveResponse xmlns="http://www.loc.gov/zing/srw/"><numberOfRecords>0</numberOfRecords></searchRetrieveResponse>'
+
+
+def test_record_reads_every_detail_field():
+    r = record(FULL)
+    assert r["title"] == "The Chesapeake oyster : a history"
+    assert r["holdings"][0]["call_number"] == "SH371 .K44 2020"
+    assert r["publication"] == "Baltimore : Johns Hopkins University Press, 2020"
+    assert r["edition"] == "Second edition"
+    assert r["description"] == "xii, 320 pages : illustrations ; 24 cm"
+    assert r["series"] == "Chesapeake books ; 12"
+    assert r["isbns"] == ["9781421437576", "1421437570"]
+    assert r["contributors"] == ["Breitburg, Denise", "Maryland Sea Grant"]
+    assert r["summary"] == "A history of the oyster in the bay"
+    assert r["contents"] == ["Origins", "The fishery", "Restoration"]
+    assert r["notes"] == [
+        {"label": "Note", "texts": ["Includes index"]},
+        {"label": "Bibliography", "texts": ["Includes bibliographical references"]},
+    ]
+
+
+def test_details_are_empty_when_the_record_has_none():
+    rec = ET.fromstring(
+        '<record xmlns="http://www.loc.gov/MARC21/slim"><controlfield tag="001">1</controlfield>'
+        '<datafield tag="245"><subfield code="a">Untitled</subfield></datafield></record>'
+    )
+    assert _details(rec) == {
+        "publication": None, "edition": None, "description": None, "series": None, "summary": None,
+        "isbns": [], "contributors": [], "contents": [], "notes": [],
+    }
+
+
+def test_record_from_a_big_ten_library_keeps_its_id():
+    r = record(FULL, BTAA[0])
+    assert r["id"] == "rutgers:990036740560108238"
+    assert r["btaa"][0]["available"] is True
+
+
+def test_record_is_none_when_nothing_matches():
+    assert record(EMPTY) is None
 
 
 def test_parses_print_record_with_holdings():
@@ -213,3 +255,47 @@ def test_pool_title_query_falls_back_to_all_keywords_when_only_a_name_was_typed(
 def test_pool_gives_every_or_branch_narrow_queries():
     parts = [part(["jazz"], [["A", "B", "C", "D", "E"]]), part(["oysters"], operator="OR")]
     assert 'alma.title all "oysters"' in pool_queries(parts)
+
+
+def test_details_read_enhanced_contents_notes():
+    # Newer records list each chapter in $t (title) and $r (author), with no $a.
+    rec = ET.fromstring(
+        '<record xmlns="http://www.loc.gov/MARC21/slim"><datafield tag="505">'
+        '<subfield code="t">Origins /</subfield><subfield code="r">Victor Kennedy --</subfield>'
+        '<subfield code="t">The fishery.</subfield></datafield></record>'
+    )
+    assert _details(rec)["contents"] == ["Origins / Victor Kennedy", "The fishery"]
+
+
+def ave_record(status):
+    return (
+        '<searchRetrieveResponse xmlns="http://www.loc.gov/zing/srw/"><numberOfRecords>1</numberOfRecords>'
+        '<records><record><recordData><record xmlns="http://www.loc.gov/MARC21/slim">'
+        '<controlfield tag="001">1</controlfield><datafield tag="AVE">'
+        f'<subfield code="e">{status}</subfield></datafield></record></recordData></record></records>'
+        '</searchRetrieveResponse>'
+    ).encode()
+
+
+def test_online_only_when_the_online_copy_is_available():
+    assert parse_response(ave_record("Available"))["records"][0]["online"] is True
+    assert parse_response(ave_record("Not Available"))["records"][0]["online"] is False
+
+
+def test_notes_are_labelled_by_type_and_grouped():
+    rec = ET.fromstring(
+        '<record xmlns="http://www.loc.gov/MARC21/slim">'
+        '<datafield tag="500"><subfield code="a">Cover title.</subfield></datafield>'
+        '<datafield tag="500"><subfield code="a">"June 2006."</subfield></datafield>'
+        '<datafield tag="530"><subfield code="a">Also available via Internet.</subfield>'
+        '<subfield code="u">http://example.org</subfield></datafield>'
+        '<datafield tag="502"><subfield code="b">Ph. D.</subfield><subfield code="c">University of Maryland,</subfield>'
+        '<subfield code="d">2019.</subfield></datafield>'
+        '<datafield tag="588"><subfield code="a">Description based on print version record.</subfield></datafield>'
+        '</record>'
+    )
+    assert _details(rec)["notes"] == [
+        {"label": "Note", "texts": ["Cover title", '"June 2006."']},
+        {"label": "Other formats", "texts": ["Also available via Internet"]},
+        {"label": "Dissertation", "texts": ["Ph. D. University of Maryland, 2019"]},
+    ]

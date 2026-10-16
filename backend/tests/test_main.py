@@ -1,10 +1,11 @@
 from pathlib import Path
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
 from app import main
-from app.sru import BTAA
+from app.sru import BTAA, UMD
 
 FIXTURE = (Path(__file__).parent / "fixtures" / "sru_umd_print.xml").read_bytes()
 
@@ -359,3 +360,61 @@ def test_a_big_ten_catalog_sending_a_web_page_is_treated_as_not_responding(monke
     assert res.status_code == 200
     assert res.json()["records"][0]["umd"] is True
     assert [lib["total"] for lib in res.json()["libraries"]] == [None] * len(BTAA)
+
+
+FULL = (Path(__file__).parent / "fixtures" / "sru_record_full.xml").read_bytes()
+EMPTY = b'<searchRetrieveResponse xmlns="http://www.loc.gov/zing/srw/"><numberOfRecords>0</numberOfRecords></searchRetrieveResponse>'
+CATALOG_DOWN = "The library catalog is not responding. Try again shortly."
+
+
+def fake_catalog(monkeypatch, reply):
+    calls = []
+
+    async def fake_fetch(cql, base_url=UMD["base_url"]):
+        calls.append((cql, base_url))
+        if isinstance(reply, Exception):
+            raise reply
+        return reply
+
+    monkeypatch.setattr(main, "fetch", fake_fetch)
+    return calls
+
+
+def test_record_fetches_a_umd_record_by_id(monkeypatch):
+    calls = fake_catalog(monkeypatch, FULL)
+    res = TestClient(main.app).get("/record/990036740560108238")
+    assert res.status_code == 200
+    assert res.json()["title"] == "The Chesapeake oyster : a history"
+    assert res.json()["publication"] == "Baltimore : Johns Hopkins University Press, 2020"
+    assert calls == [("alma.mms_id=990036740560108238", UMD["base_url"])]
+
+
+def test_record_fetches_a_big_ten_record_from_its_library(monkeypatch):
+    calls = fake_catalog(monkeypatch, FULL)
+    res = TestClient(main.app).get("/record/rutgers:990036740560108238")
+    assert res.status_code == 200
+    assert res.json()["id"] == "rutgers:990036740560108238"
+    assert calls == [("alma.mms_id=990036740560108238", BTAA[0]["base_url"])]
+
+
+@pytest.mark.parametrize("bad", ["harvard:123", "abc", "123 OR alma.all_for_ui=x", "rutgers:1 OR 1", "rutgers:"])
+def test_record_rejects_bad_ids_without_searching(monkeypatch, bad):
+    calls = fake_catalog(monkeypatch, FULL)
+    res = TestClient(main.app).get(f"/record/{bad}")
+    assert res.status_code == 404
+    assert calls == []
+
+
+def test_record_not_found(monkeypatch):
+    fake_catalog(monkeypatch, EMPTY)
+    res = TestClient(main.app).get("/record/123")
+    assert res.status_code == 404
+    assert res.json()["detail"] == "We couldn't find that record."
+
+
+@pytest.mark.parametrize("reply", [httpx.ConnectError("down"), b"<html>maintenance</html>"])
+def test_record_reports_a_catalog_failure(monkeypatch, reply):
+    fake_catalog(monkeypatch, reply)
+    res = TestClient(main.app).get("/record/123")
+    assert res.status_code == 502
+    assert res.json()["detail"] == CATALOG_DOWN

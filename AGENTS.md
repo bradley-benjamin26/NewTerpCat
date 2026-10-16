@@ -22,18 +22,24 @@
     * hooks/test-green-claude-changes.sh -- self-check for that hook
     * hooks/green-claude-audit.sh -- original Write/Edit-only hook from the plugin installer; no longer used
 * backend -- FastAPI API (Python 3.13, run with uv)
-    * app/main.py -- /search endpoint: parses AND/OR/NOT, runs analysis and lookups, queries UMD (and the Big Ten catalogs when asked), merges copies of the same book
+    * app/main.py -- /search endpoint: parses AND/OR/NOT, runs analysis and lookups, queries UMD (and the Big Ten catalogs when asked), merges copies of the same book; /record/{id} endpoint: one record with full details
     * app/analyze.py -- spaCy query analysis: keywords, possible authors, noun phrases
     * app/lcsh.py -- Library of Congress Subject Headings lookup and matching
-    * app/sru.py -- Big Ten catalog list; builds CQL queries (full and narrow pool queries) for Alma SRU and parses MARCXML results
+    * app/sru.py -- Big Ten catalog list; builds CQL queries (full and narrow pool queries) for Alma SRU and parses MARCXML results, with full details for one record
     * app/rank.py -- relevancy scoring with a per-rule breakdown
     * app/worldcat.py -- WorldCat holdings counts for the ranking bonus
     * tests/ -- pytest tests; fixtures/ holds sample SRU responses
 * frontend -- Next.js TypeScript web app
     * app/page.tsx -- home page with the search box
     * app/search/page.tsx -- results page; calls the backend
+    * app/search/loading.tsx -- search box and "Searching the catalog…" while results load (the Suspense boundary cacheComponents needs)
     * app/SearchForm.tsx -- search box and "Include Big Ten libraries" checkbox
-    * app/ResultsList.tsx -- results list with UMD and interlibrary loan availability, relevance breakdown per result, and "What we searched" panel
+    * app/ResultsList.tsx -- results list with UMD and interlibrary loan availability, relevance breakdown per result, and "What we searched" panel; titles open the item page
+    * app/item/ -- item page for one record
+        * [id]/page.tsx -- the page: where to find it, call number, details, subjects, contents, notes
+        * [id]/not-found.tsx -- shown when the record doesn't exist
+        * [id]/loading.tsx -- search box and "Loading the record…" while the record loads
+        * item.module.css -- item page styles
     * app/relevance/ -- relevance settings page: users change the points per ranking rule, saved in a "weights" cookie that the search page sends to the backend
         * page.tsx -- the page; reads the saved points
         * RelevanceForm.tsx -- the points form (client component)

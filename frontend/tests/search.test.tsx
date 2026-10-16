@@ -79,7 +79,7 @@ test("results list announces the count and shows each record", async () => {
   const first = within(items[0]);
   expect(
     first.getByRole("link", { name: "The adaptive challenge of climate change" }).getAttribute("href"),
-  ).toBe("https://example.org/1");
+  ).toBe("/item/1");
   first.getByText("2015");
   first.getByText(/Available at UMD.*Stacks.*QC903 \.A247 2015/);
 
@@ -231,10 +231,10 @@ test("a UMD book also at Big Ten libraries says it can come through interlibrary
   screen.getByText("Also available through interlibrary loan from: Rutgers University");
 });
 
-test("a book not held at UMD says so, without a link", async () => {
+test("a book not held at UMD says so, without a link to another library", async () => {
   const { container } = render(<ResultsList query="x" result={{ total: 1, records: [bigTenOnly] }} />);
   screen.getByRole("heading", { level: 2, name: "Oyster culture" });
-  expect(screen.queryByRole("link", { name: "Oyster culture" })).toBeNull();
+  expect(screen.getByRole("link", { name: "Oyster culture" }).getAttribute("href")).toMatch(/^\/item\//);
   screen.getByText("Not held at UMD. Available through interlibrary loan from: Rutgers University, UCLA");
   expect(screen.queryByText(/Availability unknown/)).toBeNull();
   await expectNoAxeViolations(container);
@@ -267,4 +267,10 @@ test("books found only at Big Ten libraries are listed when UMD finds nothing", 
   render(<ResultsList query="x" result={{ total: 0, records: [bigTenOnly], libraries }} />);
   screen.getByRole("heading", { level: 1, name: "0 results at UMD for “x”" });
   screen.getByRole("heading", { level: 2, name: "Oyster culture" });
+});
+
+test("result titles open the item page", () => {
+  const record = { ...results.records[0], id: "rutgers:991", url: null, umd: false };
+  render(<ResultsList query="climate change" result={{ ...results, records: [record] }} />);
+  expect(screen.getByRole("link", { name: record.title }).getAttribute("href")).toBe("/item/rutgers%3A991");
 });
