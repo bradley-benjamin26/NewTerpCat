@@ -95,6 +95,12 @@ test("renders where to find it first, then the details", async () => {
   await expectNoAxeViolations(container);
 });
 
+test("shows the cover", async () => {
+  api(full);
+  const { container } = render(await ItemPage(props()));
+  expect(container.querySelector("img")?.getAttribute("src")).toContain("syndetics.com/index.php?client=primo&isbn=9781421437576/SC.JPG");
+});
+
 test("labels each note with its type", async () => {
   api(full);
   render(await ItemPage(props()));

@@ -12,6 +12,8 @@ export default function Cover({ isbns, className }: { isbns: string[]; className
   const [tried, setTried] = useState({ isbn, count: 0 });
   const count = tried.isbn === isbn ? tried.count : 0; // a new book starts over at Syndetics
   const next = () => setTried({ isbn, count: count + 1 });
+  // Width 0 is a failed image; Syndetics answers a missing cover with a square placeholder, real covers are taller.
+  const check = (img: HTMLImageElement) => (img.naturalWidth === 0 || img.naturalWidth === img.naturalHeight) && next();
   if (!isbn || count >= SOURCES.length) return null;
   return (
     // eslint-disable-next-line @next/next/no-img-element -- remote covers of unknown size; nothing for next/image to optimize
@@ -21,8 +23,11 @@ export default function Cover({ isbns, className }: { isbns: string[]; className
       loading="lazy"
       className={className}
       onError={next}
-      // Syndetics answers a missing cover with a square placeholder; real covers are taller than wide.
-      onLoad={(e) => e.currentTarget.naturalWidth === e.currentTarget.naturalHeight && next()}
+      onLoad={(e) => check(e.currentTarget)}
+      // A server-rendered cover can finish before hydration, and React doesn't replay those events.
+      ref={(img) => {
+        if (img?.complete) check(img);
+      }}
     />
   );
 }

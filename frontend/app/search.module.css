@@ -151,3 +151,22 @@
   margin: 0;
   text-align: right;
 }
+
+/* Room for the floated cover; the hairline keeps white covers off the white page. */
+.results > li {
+  display: flow-root;
+}
+
+.cover {
+  float: left;
+  width: 60px;
+  margin: 0.25rem 1rem 0.5rem 0;
+  border: 1px solid var(--border);
+}
+
+@media (max-width: 30rem) {
+  .cover {
+    float: none;
+    display: block;
+  }
+}

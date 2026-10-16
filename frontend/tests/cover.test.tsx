@@ -1,4 +1,4 @@
-import { afterEach, expect, test } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import axe from "axe-core";
 import Cover from "../app/Cover";
@@ -51,6 +51,15 @@ test("renders nothing when both fail", () => {
   fireEvent.error(img(container));
   fireEvent.error(img(container));
   expect(container.querySelector("img")).toBeNull();
+});
+
+test("checks an image that finished before React attached its handlers", () => {
+  // A server-rendered cover can load or fail before hydration, and React doesn't replay those events.
+  // Only the first image has finished; the Open Library image it switches to is still loading.
+  const complete = vi.spyOn(HTMLImageElement.prototype, "complete", "get").mockReturnValueOnce(true);
+  const { container } = render(<Cover isbns={["9781421437576"]} />);
+  complete.mockRestore();
+  expect(img(container).getAttribute("src")).toBe(OPEN_LIBRARY);
 });
 
 test("renders nothing without an ISBN", () => {
