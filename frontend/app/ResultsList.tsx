@@ -10,6 +10,7 @@ export type CatalogRecord = {
   url: string | null;
   online: boolean;
   holdings: Holding[];
+  oclc: string | null;
   umd: boolean;
   btaa: { name: string; region: string; available: boolean }[];
   score: number;
