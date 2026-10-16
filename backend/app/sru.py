@@ -149,14 +149,20 @@ def _record(rec, library: dict | None) -> dict:
     year = re.search(r"\d{4}", " ".join(_subfields(rec, "264", "c") or _subfields(rec, "260", "c")))
 
     def imprint(code):
-        text = " ".join(_subfields(rec, "264", code) or _subfields(rec, "260", code)).rstrip(TRAILING)
-        # Catalogers write "[publisher not identified]"; a citation leaves the part out instead.
-        return None if not text or "not identified" in text.lower() else text
+        # $a ends " :" and $b ends ","; a final period belongs to an abbreviation ("Md.", "Inc.").
+        text = " ".join(_subfields(rec, "264", code) or _subfields(rec, "260", code)).rstrip(" /:;,")
+        # Catalogers write "[publisher not identified]" (older records "[S.l.]", "[s.n.]"); a citation leaves the part out.
+        return None if not text or "not identified" in text.lower() or text.lower() in {"[s.l.]", "[s.n.]"} else text
 
     def name(parts):
         text = " ".join(parts).rstrip(" /:;,")
         # Keep the period that closes an initial or Jr./Sr.; drop one that only ends the field.
         return text if re.search(r"\b([A-Z]|Jr|Sr)\.$", text) else text.rstrip(".")
+
+    # 250 always ends in a period; keep it only when it closes an abbreviation ("2nd ed.", "Rev.").
+    edition = " ".join(_subfields(rec, "250", "a")).rstrip(" /:;,")
+    if not re.search(r"\b[A-Za-z][a-z]{0,3}\.$", edition):
+        edition = edition.rstrip(".")
 
     authors = [name(names)] if author else []
     for f in rec.findall("marc:datafield[@tag='700']", NS):
@@ -175,7 +181,7 @@ def _record(rec, library: dict | None) -> dict:
         "date": year.group() if year else None,
         "publisher": imprint("b"),
         "place": imprint("a"),
-        "edition": " ".join(_subfields(rec, "250", "a")).rstrip(TRAILING) or None,
+        "edition": edition or None,
         "url": UMD["record_url_template"].format(mms_id=mms_id),
         "online": any(e.text == "Available" for e in rec.iterfind("marc:datafield[@tag='AVE']/marc:subfield[@code='e']", NS)),
         "holdings": holdings,

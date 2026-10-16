@@ -72,3 +72,13 @@ test("citation has no axe violations", async () => {
   const { violations } = await axe.run(container);
   expect(violations.map((v) => v.id)).toEqual([]);
 });
+
+test("download keeps the file URL until the browser has read it", () => {
+  vi.useFakeTimers();
+  render(<Citation record={book} />);
+  fireEvent.click(screen.getByRole("button", { name: "Download RIS" }));
+  expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+  vi.runAllTimers();
+  expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:test");
+  vi.useRealTimers();
+});

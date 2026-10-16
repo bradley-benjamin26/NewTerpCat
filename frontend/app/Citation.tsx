@@ -24,7 +24,7 @@ export function download(name: string, text: string) {
   a.href = url;
   a.download = name;
   a.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000); // Safari reads the blob after click() returns
 }
 
 export function StylePicker({ value, onChange }: { value: Style; onChange: (s: Style) => void }) {

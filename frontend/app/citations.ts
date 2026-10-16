@@ -60,13 +60,14 @@ function chicagoAuthors([first, ...rest]: string[]) {
 
 export function cite(r: Citable, style: Style): Cited {
   const has = r.authors.length > 0;
+  const stop = /[.?!]$/.test(r.title) ? "" : "."; // "Who moved my cheese?" takes no period
   if (style === "apa") {
     const year = `(${r.date ?? "n.d."}).`;
     const publisher = r.publisher ? ` ${end(r.publisher)}` : "";
     const edition = r.edition ? ` (${r.edition})` : "";
     return has
-      ? { before: `${end(apaAuthors(r.authors))} ${year} `, title: sentenceCase(r.title), after: `${edition}.${publisher}` }
-      : { before: "", title: sentenceCase(r.title), after: `${edition}. ${year}${publisher}` };
+      ? { before: `${end(apaAuthors(r.authors))} ${year} `, title: sentenceCase(r.title), after: `${edition}${edition ? "." : stop}${publisher}` }
+      : { before: "", title: sentenceCase(r.title), after: `${edition}${edition ? "." : stop} ${year}${publisher}` };
   }
   const before = has ? `${end(style === "mla" ? mlaAuthors(r.authors) : chicagoAuthors(r.authors))} ` : "";
   const imprint = r.place && r.publisher ? `${r.place}: ${r.publisher}` : r.place || r.publisher;
@@ -75,7 +76,7 @@ export function cite(r: Citable, style: Style): Cited {
       ? [[r.edition, r.publisher, r.date].filter(Boolean).join(", ")]
       : [r.edition && end(r.edition), [imprint, r.date].filter(Boolean).join(", ")];
   const tail = rest.filter(Boolean).map((s) => ` ${end(s!)}`).join("");
-  return { before, title: titleCase(r.title), after: `.${tail}` };
+  return { before, title: titleCase(r.title), after: `${stop}${tail}` };
 }
 
 // RIS, the import format of Zotero, EndNote and Mendeley: "TAG  - value" lines, CRLF, one block per record.

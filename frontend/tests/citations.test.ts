@@ -142,3 +142,10 @@ test("ris joins several records", () => {
   expect(two.match(/^TY {2}- BOOK\r$/gm)).toHaveLength(2);
   expect(two).toContain("ER  - \r\nTY  - BOOK\r\n");
 });
+
+test("a title ending in ? gets no extra period", () => {
+  const q = { title: "Who moved my cheese?", edition: null };
+  expect(text(q, "apa")).toBe("Kennedy, V. S. (2020). Who moved my cheese? Johns Hopkins University Press.");
+  expect(text(q, "mla")).toBe("Kennedy, Victor S. Who Moved My Cheese? Johns Hopkins University Press, 2020.");
+  expect(text(q, "chicago")).toBe("Kennedy, Victor S. Who Moved My Cheese? Baltimore: Johns Hopkins University Press, 2020.");
+});

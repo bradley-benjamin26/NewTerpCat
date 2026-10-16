@@ -340,3 +340,15 @@ def test_notes_are_labelled_by_type_and_grouped():
         {"label": "Other formats", "texts": ["Also available via Internet"]},
         {"label": "Dissertation", "texts": ["Ph. D. University of Maryland, 2019"]},
     ]
+
+
+def test_imprint_and_edition_keep_abbreviation_periods():
+    xml = FULL.replace(b"Second edition.", b"2nd ed.").replace(b"Baltimore :", b"College Park, Md. :")
+    r = record(xml)
+    assert (r["edition"], r["place"]) == ("2nd ed.", "College Park, Md.")
+
+
+def test_old_placeholders_are_null():
+    xml = FULL.replace(b"Baltimore :", b"[S.l.] :").replace(b"Johns Hopkins University Press,", b"[s.n.],")
+    r = record(xml)
+    assert (r["place"], r["publisher"]) == (None, None)
