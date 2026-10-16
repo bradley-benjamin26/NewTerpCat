@@ -152,15 +152,18 @@
   text-align: right;
 }
 
-/* Room for the floated cover; the hairline keeps white covers off the white page. */
-.results > li {
-  display: flow-root;
+/* Clears the floated cover without flow-root, which would drop the list's rank numbers. */
+.results > li::after {
+  content: "";
+  display: block;
+  clear: both;
 }
 
+/* Right, so the rank number stays beside the title; the hairline keeps white covers off the white page. */
 .cover {
-  float: left;
+  float: right;
   width: 60px;
-  margin: 0.25rem 1rem 0.5rem 0;
+  margin: 0.25rem 0 0.5rem 1rem;
   border: 1px solid var(--border);
 }
 
