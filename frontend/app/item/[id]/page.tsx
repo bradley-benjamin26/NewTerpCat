@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { type CatalogRecord, STATUS } from "../../ResultsList";
+import Citation from "../../Citation";
 import Cover from "../../Cover";
 import { requestLinks } from "../../requests";
 import SearchForm from "../../SearchForm";
@@ -13,7 +14,6 @@ const CATALOG_DOWN = "The library catalog is not responding. Try again shortly."
 type Item = Omit<CatalogRecord, "score" | "breakdown"> & {
   subjects: string[];
   publication: string | null;
-  edition: string | null;
   description: string | null;
   series: string | null;
   summary: string | null;
@@ -119,6 +119,8 @@ export default async function ItemPage({ params }: PageProps<"/item/[id]">) {
         <p>{[item.author, item.date].filter(Boolean).join(", ")}</p>
       </header>
       <WhereToFind item={item} />
+      <h2>Cite this</h2>
+      <Citation record={item} />
       {item.summary && (
         <>
           <h2>Summary</h2>

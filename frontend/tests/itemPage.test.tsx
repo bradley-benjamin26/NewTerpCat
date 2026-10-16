@@ -18,7 +18,10 @@ const full = {
   id: "990036740560108238",
   title: "The Chesapeake oyster : a history",
   author: "Kennedy, Victor S.",
+  authors: ["Kennedy, Victor S.", "Breitburg, Denise"],
   date: "2020",
+  publisher: "Johns Hopkins University Press",
+  place: "Baltimore",
   url: "https://example.org/umd",
   online: true,
   holdings: [{ location: "McKeldin Library", call_number: "SH371 .K44 2020", status: "available" }],
@@ -76,6 +79,7 @@ test("renders where to find it first, then the details", async () => {
   expect(screen.getAllByRole("heading").map((h) => [h.tagName, h.textContent])).toEqual([
     ["H1", full.title],
     ["H2", "Where to find it"],
+    ["H2", "Cite this"],
     ["H2", "Summary"],
     ["H2", "Details"],
     ["H2", "Subjects"],
@@ -198,4 +202,12 @@ test("Big Ten item links to interlibrary loan", async () => {
   render(await ItemPage(props("rutgers:991")));
   const where = within(screen.getByRole("region", { name: "Where to find it" }));
   where.getByRole("link", { name: "Request through interlibrary loan" });
+});
+
+test("item page has a Cite this section", async () => {
+  api(full);
+  const { container } = render(await ItemPage(props()));
+  screen.getByRole("heading", { name: "Cite this" });
+  screen.getByRole("combobox", { name: "Citation style" });
+  expect(container.textContent).toContain("Kennedy, V. S., & Breitburg, D. (2020).");
 });

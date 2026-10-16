@@ -19,7 +19,11 @@ const results: SearchResult = {
       id: "1",
       title: "The adaptive challenge of climate change",
       author: null,
+      authors: [],
       date: "2015",
+      edition: null,
+      publisher: null,
+      place: null,
       url: "https://example.org/1",
       online: false,
       holdings: [{ location: "Stacks", call_number: "QC903 .A247 2015", status: "available" }],
@@ -34,7 +38,11 @@ const results: SearchResult = {
       id: "2",
       title: "Adaptive Governance and Climate Change",
       author: "Brunner, Ronald D",
+      authors: ["Brunner, Ronald D"],
       date: "2010",
+      edition: null,
+      publisher: "Columbia University Press",
+      place: "New York",
       url: "https://example.org/2",
       online: true,
       holdings: [],
@@ -49,7 +57,11 @@ const results: SearchResult = {
       id: "3",
       title: "Mystery item",
       author: null,
+      authors: [],
       date: null,
+      edition: null,
+      publisher: null,
+      place: null,
       url: "https://example.org/3",
       online: false,
       holdings: [],
@@ -306,4 +318,12 @@ test("each result has request links named with its title", async () => {
 test("online-only result has no request links", () => {
   render(<ResultsList query="q" result={{ total: 1, records: [results.records[1]] }} />);
   expect(screen.queryByRole("link", { name: /^Request/ })).toBeNull();
+});
+
+test("each result has a Cite toggle named with its title", async () => {
+  const { container } = render(<ResultsList query="climate" result={results} />);
+  const toggles = screen.getAllByText("Cite", { selector: "summary" });
+  expect(toggles).toHaveLength(3);
+  expect(toggles[0].getAttribute("aria-label")).toBe("Cite: The adaptive challenge of climate change");
+  await expectNoAxeViolations(container);
 });

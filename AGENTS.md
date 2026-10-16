@@ -25,7 +25,7 @@
     * app/main.py -- /search endpoint: parses AND/OR/NOT, runs analysis and lookups, queries UMD (and the Big Ten catalogs when asked), merges copies of the same book; /record/{id} endpoint: one record with full details
     * app/analyze.py -- spaCy query analysis: keywords, possible authors, noun phrases
     * app/lcsh.py -- Library of Congress Subject Headings lookup and matching
-    * app/sru.py -- Big Ten catalog list; builds CQL queries (full and narrow pool queries) for Alma SRU and parses MARCXML results, with full details for one record
+    * app/sru.py -- Big Ten catalog list; builds CQL queries (full and narrow pool queries) for Alma SRU and parses MARCXML results (including citation fields: authors, publisher, place, edition), with full details for one record
     * app/rank.py -- relevancy scoring with a per-rule breakdown
     * app/worldcat.py -- WorldCat holdings counts for the ranking bonus
     * tests/ -- pytest tests; fixtures/ holds sample SRU responses
@@ -34,11 +34,15 @@
     * app/search/page.tsx -- results page; calls the backend
     * app/search/loading.tsx -- search box and "Searching the catalog…" while results load (the Suspense boundary cacheComponents needs)
     * app/SearchForm.tsx -- search box and "Include Big Ten libraries" checkbox
-    * app/ResultsList.tsx -- results list with UMD and interlibrary loan availability, request links, relevance breakdown per result, and "What we searched" panel; titles open the item page
+    * app/ResultsList.tsx -- results list with UMD and interlibrary loan availability, request links, a Cite toggle and a select checkbox per result, relevance breakdown per result, and "What we searched" panel; titles open the item page
+    * app/citations.ts -- APA, MLA and Chicago citations and RIS export
+    * app/Citation.tsx -- citation style picker with Copy and Download RIS (client component)
+    * app/citation.module.css -- citation and export bar styles
+    * app/ExportBar.tsx -- exports the citations of the selected results as RIS or copied text (client component)
     * app/requests.ts -- request links: Primo hold, ILLiad loan and chapter scan
     * app/Cover.tsx -- book cover: Syndetics, then Open Library, nothing when neither has one
     * app/item/ -- item page for one record
-        * [id]/page.tsx -- the page: where to find it, request links, call number, details, subjects, contents, notes
+        * [id]/page.tsx -- the page: where to find it, request links, call number, citation, details, subjects, contents, notes
         * [id]/not-found.tsx -- shown when the record doesn't exist
         * [id]/loading.tsx -- search box and "Loading the record…" while the record loads
         * item.module.css -- item page styles
