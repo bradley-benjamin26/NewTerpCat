@@ -76,3 +76,23 @@
     margin-bottom: 0.5rem;
   }
 }
+
+.heading {
+  display: flow-root;
+  max-width: 42rem;
+}
+
+.cover {
+  float: right;
+  width: 120px;
+  margin: 1.5rem 0 0.5rem 1.5rem;
+  border: 1px solid var(--border);
+}
+
+@media (max-width: 30rem) {
+  .cover {
+    float: none;
+    display: block;
+    margin: 1.5rem 0 0;
+  }
+}

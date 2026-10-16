@@ -161,6 +161,7 @@ def _record(rec, library: dict | None) -> dict:
         "holdings": holdings,
         "subjects": subjects,
         "oclc": oclc,
+        "isbns": [a.text.rstrip(TRAILING) for a in rec.iterfind("marc:datafield[@tag='020']/marc:subfield[@code='a']", NS) if a.text],
         "umd": True,
         "btaa": [],
     }

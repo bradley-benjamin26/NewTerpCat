@@ -13,6 +13,7 @@ const umd: CatalogRecord = {
   online: false,
   holdings: [{ location: "Stacks", call_number: "SH371", status: "available" }],
   oclc: "123",
+  isbns: [],
   umd: true,
   btaa: [],
   score: 0,

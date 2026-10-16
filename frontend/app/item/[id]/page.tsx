@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { type CatalogRecord, STATUS } from "../../ResultsList";
+import Cover from "../../Cover";
 import { requestLinks } from "../../requests";
 import SearchForm from "../../SearchForm";
 import styles from "../item.module.css";
@@ -16,7 +17,6 @@ type Item = Omit<CatalogRecord, "score" | "breakdown"> & {
   description: string | null;
   series: string | null;
   summary: string | null;
-  isbns: string[];
   contributors: string[];
   contents: string[];
   notes: { label: string; texts: string[] }[];
@@ -113,8 +113,11 @@ export default async function ItemPage({ params }: PageProps<"/item/[id]">) {
   return (
     <main className={styles.item}>
       <SearchForm />
-      <h1>{item.title}</h1>
-      <p>{[item.author, item.date].filter(Boolean).join(", ")}</p>
+      <header className={styles.heading}>
+        <Cover isbns={item.isbns} className={styles.cover} />
+        <h1>{item.title}</h1>
+        <p>{[item.author, item.date].filter(Boolean).join(", ")}</p>
+      </header>
       <WhereToFind item={item} />
       {item.summary && (
         <>

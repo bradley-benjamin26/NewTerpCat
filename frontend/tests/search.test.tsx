@@ -24,6 +24,7 @@ const results: SearchResult = {
       online: false,
       holdings: [{ location: "Stacks", call_number: "QC903 .A247 2015", status: "available" }],
       oclc: null,
+      isbns: [],
       umd: true,
       btaa: [],
       score: 20,
@@ -38,6 +39,7 @@ const results: SearchResult = {
       online: true,
       holdings: [],
       oclc: null,
+      isbns: [],
       umd: true,
       btaa: [],
       score: 20,
@@ -52,6 +54,7 @@ const results: SearchResult = {
       online: false,
       holdings: [],
       oclc: null,
+      isbns: [],
       umd: true,
       btaa: [],
       score: 0,
@@ -202,6 +205,15 @@ test("home page and results link to the relevance settings", () => {
   cleanup();
   render(<ResultsList query="climate" result={results} />);
   expect(screen.getByRole("link", { name: /relevance settings/i }).getAttribute("href")).toBe("/relevance");
+});
+
+test("shows a cover for a result with an ISBN", async () => {
+  const withIsbn = { ...results.records[0], isbns: ["9781421437576"] };
+  const { container } = render(<ResultsList query="oysters" result={{ ...results, records: [withIsbn, results.records[1]] }} />);
+  const [first, second] = screen.getAllByRole("listitem");
+  expect(first.querySelector("img")?.getAttribute("src")).toContain("isbn=9781421437576");
+  expect(second.querySelector("img")).toBeNull();
+  await expectNoAxeViolations(container);
 });
 
 const rutgers = { name: "Rutgers University", region: "east_coast", available: true };

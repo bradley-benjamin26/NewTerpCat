@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Cover from "./Cover";
 import { requestLinks } from "./requests";
 import styles from "./search.module.css";
 
@@ -12,6 +13,7 @@ export type CatalogRecord = {
   online: boolean;
   holdings: Holding[];
   oclc: string | null;
+  isbns: string[];
   umd: boolean;
   btaa: { name: string; region: string; available: boolean }[];
   score: number;
@@ -172,6 +174,7 @@ export default function ResultsList({ query, result }: { query: string; result: 
       <ol className={styles.results}>
         {result.records.map((r) => (
           <li key={r.id}>
+            <Cover isbns={r.isbns} className={styles.cover} />
             <h2>
               <Link href={`/item/${encodeURIComponent(r.id)}`}>{r.title}</Link>
             </h2>
